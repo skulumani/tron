@@ -7,6 +7,24 @@ class Status(enum.Enum):
     CRASH_INTO_WALL = enum.auto()
     CRASH_INTO_OPPONENT = enum.auto()
 
+class Orientation(enum.IntEnum):
+    N = 0
+    NE = 1
+    E = 2
+    SE = 3
+    S = 4
+    SW = 5
+    W = 6
+    NW = 7
+
+class Turn(enum.IntEnum):
+    LEFT_90 = -2
+    LEFT_45 = -1
+    STRAIGHT = 0
+    RIGHT_45 = 1
+    RIGHT_90 = 2
+
+# TODO add a mapping from (x,y) to numpy grid location
 class Player:
     # movement possible - square grid - diagonals possible
     # (dy, dx) 
@@ -58,7 +76,7 @@ class Player:
         """
 
         self.orientation = int((self.orientation + action) % 8)
-        dx, dy = Player.STEPS[self.orientation]
+        dy, dx = Player.STEPS[self.orientation]
         
         self.x += dx
         self.y += dy
