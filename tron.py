@@ -193,7 +193,94 @@ class Tron:
         observation = self._get_observation()
         return observation, done, status
 
+    def _validate_player(self, player, opponent):
+        """Check if player is in valid state
 
+        Args:
+            player (Player): player instance
+
+        Returns:
+            status (int): status for the current player
+                0: valid
+                1: crash into wall
+                2: crash into tail
+        """
+        status = 0
+
+        # check for crash into wall
+        status = self._validate_wall(player)
+
+        if status > 0:
+            return status
+
+        # check crash into a tail
+        status = self._validate_tail(player)
+
+        if status > 0:
+            return status
+
+        # check for crash into head
+        status = player.front_crash(opponent)
+
+        return status
+
+    def _validate_wall(self, player):
+        """Check if player crashes into a wall boundary
+
+        Args:
+            player (Player): player instance
+
+        Returns:
+            status (int): status for the player
+                0: valid
+                1: crash into wall
+        """
+        horizontal_wall = player.y < 0 or player.y >= self.size
+        vertical_wall = player.x < 0 or player.x >= self.size
+        
+        if horizontal_wall or vertical_wall:
+            return Status.CRASH_INTO_WALL
+        else:
+            return Status.VALID
+
+    def _validate_tail(self, player):
+        """Check if player crashed into a tail
+
+        Args:
+            player (Player): player instance
+
+        Returns:
+            status (int): status for the player
+                0: player is valid
+                2: player crashed into a tail
+        """
+        if np.sum(self.grid, axis=2)[player.y, player.x] > 0:
+            return Status.CRASH_INTO_OPPONENT
+        else:
+            return Status.VALID
+
+    def _validate_front_crash(self, player1, player2):
+        """Check if two players heads have collided
+
+        Args:
+            player1 (Player): player 1 instance
+            player2 (Player): player 2 instance
+
+        Returns:
+            status (int): status for player1
+                0: valid
+                2: crash into player2
+        """
+        if player1.front_crash(player2):
+            Status.CRASH_INTO_OPPONENT
+        else:
+            Status.VALID
+
+
+
+
+        
+         
 
 
 
