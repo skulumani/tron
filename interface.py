@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import argparse
 
 import tron
 
@@ -25,35 +26,39 @@ class Text():
 
 class UserInterface():
 
-    def __init__(self):
+    def __init__(self, size=100, num_players=2, width=800):
 
-        # instantiate the game
+        pygame.init()
         # TODO - define colors for the total number of players in game - dark variants for head
-        self.game = tron.Tron(size=100, num_players=2)
-        observation = self.game.reset()
+        self.size = size
+        self.num_players = num_players
+        self.WIDTH = width
+
+        # intialize game
+        self._reset()
+
+    def _reset(self):
+        """Intialize everything"""
+        self.game = tron.Tron(self.size, self.num_players)
+
+        self.observation = self.game.reset()
         self.running = True
+        self.done = False
 
         # player colors
-        num_players = self.game.num_players
-        if num_players <= 2:
-            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in range(0, num_players)]
-        elif num_players <= len(COLOR_PAIRS):    
-            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(0,len(COLOR_PAIRS)), num_players)]
+        if self.num_players <= 2:
+            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in range(0, self.num_players)]
+        elif self.num_players <= len(COLOR_PAIRS):    
+            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(0,len(COLOR_PAIRS)), self.num_players)]
         else:
-            self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), (num_players, 2))]
+            self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), (self.num_players, 2))]
     
-        board = observation['board']
-        rows = observation['board'].shape[0]
-        cols = observation['board'].shape[1]
+        board = self.observation['board']
+        rows = self.observation['board'].shape[0]
+        cols = self.observation['board'].shape[1]
 
-        self.WIDTH = 800 
         self.cellsize = self.WIDTH // rows
         self.HEIGHT = cols * self.cellsize
-        
-        pygame.init()
-        self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
-        pygame.display.set_caption('Tron')
-        self.clock = pygame.time.Clock()
 
         # intialize image array and surface
         self.image = np.zeros((rows, cols, 3))
@@ -62,13 +67,13 @@ class UserInterface():
         self.image[board[:,:,0] == 1] = COLORS['black']
         self.surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
         self.scaled_surf = pygame.Surface((self.WIDTH, self.HEIGHT))
-
         # text object
         self.position_text = Text(size=16)
 
-    def _reset(self):
-        """Intialize everything"""
-        pass
+        self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        pygame.display.set_caption('Tron')
+        self.clock = pygame.time.Clock()
+
     def _build_board(self, observation):
         """Turn current game state into surface for pygame"""
 
@@ -80,7 +85,6 @@ class UserInterface():
         
         # draw heads
         for p, color_dict in zip(positions, self.player_colors):
-            # import pdb;pdb.set_trace()
             self.image[p[0],p[1],:] = color_dict['head']
 
         # build surface
@@ -117,21 +121,18 @@ class UserInterface():
                     action = tron.Turn.STRAIGHT
                 elif event.key in (pygame.K_r,):
                     # reset game
-                    self.game.reset()
-                    self.done = False
+                    self._reset()
 
         # get a user action (or from an agent) 
         return action
 
     def update(self, *action):
         # change game state
-        # import pdb;pdb.set_trace()
-        observation, done, status = self.game.move(*action)
-        return observation, done, status
+        self.observation, self.done, self.status = self.game.move(*action)
 
-    def render(self, observation, string):
+    def render(self, string):
         # draw surface
-        self._build_board(observation)
+        self._build_board(self.observation)
 
         pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT), self.scaled_surf)
         self.scaled_surf = self._draw_grid(self.scaled_surf)
@@ -145,16 +146,23 @@ class UserInterface():
 
     def run(self):
         """Game loop"""
-        self.done = False
         while self.running:
             action = self.process_input()
             if action is not None and not self.done:
-                observation, self.done, status = self.update(action, action)
-                self.render(observation, "END" if self.done else "")
+                self.update(action, action)
+            self.render("END" if self.done else "")
             self.clock.tick(60)
 
         pygame.quit()
 
 if __name__ == "__main__":
-    ui = UserInterface()
+    parser = argparse.ArgumentParser(description='TRON UI')
+    parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
+    parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
+    parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human")
+    # TODO add parsing for the AI agent to use for the AI
+    # TODO validate number of agents = players - human players
+
+    args = parser.parse_args()
+    ui = UserInterface(size=args.size, num_players=args.players)
     ui.run()
