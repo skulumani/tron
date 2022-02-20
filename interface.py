@@ -4,13 +4,7 @@ import pygame
 import tron
 
 class UserInterface():
-    COLORS = {'black': (0, 0, 0),
-              'red': (255, 0, 0),
-              'blue': (0, 255, 0),
-              'green': (0, 0, 255),
-              'white': (255, 255, 255),
-              'gray': (128, 128, 128)
-              }
+    COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 
     def __init__(self):
 
@@ -18,35 +12,40 @@ class UserInterface():
         self.game = tron.Tron(size=100, num_players=2)
         observation = self.game.reset()
         self.done = False
+    
+        board = observation['board']
+        rows = observation['board'].shape[0]
+        cols = observation['board'].shape[1]
 
         self.WIDTH = 800 
-        self.cellsize = self.WIDTH // observation['board'].shape[0]
-        self.HEIGHT = observation['board'].shape[1] * self.cellsize
+        self.cellsize = self.WIDTH // rows
+        self.HEIGHT = cols * self.cellsize
         
         pygame.init()
         self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption('Tron')
         self.clock = pygame.time.Clock()
 
+        # intialize image array and surface
+        self.image = np.zeros((rows, cols, 3))
+        self.image.fill(255) # everything white
+        # build obstacles
+        self.image[board[:,:,0] == 1] = UserInterface.COLORS['black']
         
     def _draw_board(self, observation):
         """Turn current game state into image array for pygame"""
 
         board = observation['board']
-        image = np.zeros((self.game.size, self.game.size, 3))
-
-        # draw obstacles
-        image[board[:,:,0] != 1] = UserInterface.COLORS['white']
 
         # draw players
         for ii in range(1, board.shape[2]):
-            image[board[:, :, ii] == 1] = UserInterface.COLORS['blue']
+            self.image[board[:, :, ii] == 1] = UserInterface.COLORS['blue']
         
         # build surface
-        surf = pygame.Surface((image.shape[0], image.shape[1]))
-        pygame.surfarray.blit_array(surf, image)
+        surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
+        pygame.surfarray.blit_array(surf, self.image)
         surf = pygame.transform.scale(surf, (self.WIDTH, self.HEIGHT))
-        surf = self._draw_grid(surf, image)
+        surf = self._draw_grid(surf, self.image)
 
         return surf
 
@@ -104,7 +103,6 @@ class UserInterface():
                 print(action)
                 observation, done, status = self.update(action, action)
                 print(observation['positions'])
-                print(observation['board'][:, :, 1])
                 self.render(observation)
             self.clock.tick(60)
 
