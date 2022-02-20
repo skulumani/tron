@@ -1,5 +1,6 @@
 import numpy as np
 import enum 
+import pygame
 
 
 class Status(enum.Enum):
@@ -117,10 +118,7 @@ class Tron:
         Returns:
             observation (dict): from _get_observation - view of game 
         """
-        # grid (0, 0) is in top left corner
-        # positive x - move to larger/higher columns (right)
-        # positive y - move to higher/larger rows (down)
-        self.grid = np.zeros([self.size, self.size, self.num_players]) # third axis for player state 
+        self.grid = self._define_grid()
         
         # initialize all the players
         
@@ -137,7 +135,7 @@ class Tron:
         x_location = np.random.choice(np.arange(self.size), self.num_players)
         for x in x_location:
             y = np.random.choice([self.size - 1 - wall_gap, wall_gap])
-            orientation_options = NORTH_FACING if y > self.halfsize else SOUTH_FACING
+            orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
 
             self.players.append(Player(y, x, np.random.choice(orientation_options)))
 
@@ -148,10 +146,28 @@ class Tron:
         observation = self._get_observation()
         return observation
     
+    def _define_grid(self):
+        """Define game board
+        
+        Returns:
+            grid (ndarray): nxnxm array of walls and player positions
+        """
+        # grid (0, 0) is in top left corner
+        # positive x - move to larger/higher columns (right)
+        # positive y - move to higher/larger rows (down)
+        grid = np.zeros([self.size, self.size, 1+self.num_players]) # third axis for player state 
+        # draw boundary walls
+        grid[0,:,0] = 1
+        grid[-1,:,0] = 1
+        grid[:,0,0]=1
+        grid[:,-1,0]=1
+
+        return grid
+
     def _update(self):
         """Define player positions in the grid"""
         for idx, player in enumerate(self.players):
-            self.grid[player.y, player.x, idx] = 1
+            self.grid[player.y, player.x, idx+1] = 1
 
     def _get_observation(self):
         """Return representation of game
@@ -167,9 +183,9 @@ class Tron:
         """
         observation = {
             'board': self.grid.copy(),
-            'positions': tuple([(p.x, p.y) for p in self.players]),
-            'orientations': tuple([p.orientation for p in self.platyers])}
-        return observations
+            'positions': tuple([(p.y, p.x) for p in self.players]),
+            'orientations': tuple([p.orientation for p in self.players])}
+        return observation
 
     def move(self, *actions):
         """Move all the players
@@ -294,6 +310,88 @@ class Tron:
         else:
             Status.VALID
 
+class UserInterface():
+    COLORS = {'black': (0, 0, 0),
+              'red': (255, 0, 0),
+              'blue': (0, 255, 0),
+              'green': (0, 0, 255),
+              'white': (255, 255, 255),
+              'gray': (128, 128, 128)
+              }
+
+    def __init__(self):
+
+        # instantiate the game
+        self.game = Tron(size=100, num_players=2)
+        self.observation = self.game.reset()
+        self.done = False
+
+        # get initial board
+        self.board = self.observation['board']
+        self.image = np.zeros((self.game.size, self.game.size, 3))
+        self.image[self.board[:,:,0] != 1] = UserInterface.COLORS['white']
+
+        self.WIDTH = 800 
+        self.cellsize = self.WIDTH // self.image.shape[0]
+        self.HEIGHT = self.image.shape[1] * self.cellsize
+
+        pygame.init()
+        self.window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        pygame.display.set_caption('Tron')
+        self.clock = pygame.time.Clock()
+
+        # draw surface
+        self.surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
+        pygame.surfarray.blit_array(self.surf, self.image)
+        self.surf = pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT))
+        self._draw_grid()
+
+    def _draw_grid(self):
+        """Draw a game grid between cells"""
+
+        # vertical lines
+        for r in range(self.image.shape[0]):
+            pygame.draw.line(self.surf, UserInterface.COLORS['gray'], (r*self.cellsize,0), (r*self.cellsize, self.WIDTH))
+
+        # horizontal
+        for c in range(self.image.shape[1]):
+            pygame.draw.line(self.surf, UserInterface.COLORS['gray'], (0, c*self.cellsize), (self.HEIGHT, c*self.cellsize))
+            
+
+    def process_input(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.done = True
+                break
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.done = True
+
+        # get a user action (or from an agent) 
+    
+    def update(self):
+        # change game state
+
+        # self.observation, self.done, self.status = self.game.act()
+        pass
+
+    def render(self):
+        self.window.fill(UserInterface.COLORS['white'])
+        self.window.blit(self.surf, (0, 0))
+        pygame.display.update()
+
+    def run(self):
+        while not self.done:
+            self.process_input()
+            self.update()
+            self.render()
+            self.clock.tick(60)
+
+        pygame.quit()
+
+if __name__ == "__main__":
+    ui = UserInterface()
+    ui.run()
 
 
 
