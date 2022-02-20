@@ -29,10 +29,16 @@ class UserInterface():
         # intialize image array and surface
         self.image = np.zeros((rows, cols, 3))
         self.image.fill(255) # everything white
-        # build obstacles
+        # build obstacles - only once
         self.image[board[:,:,0] == 1] = UserInterface.COLORS['black']
-        
-    def _draw_board(self, observation):
+        self.surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
+        self.scaled_surf = pygame.Surface((self.WIDTH, self.HEIGHT))
+
+        # text object
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 32)
+        self.text_surf = self.font.render("test", True, UserInterface.COLORS['red'])
+
+    def _build_board(self, observation):
         """Turn current game state into image array for pygame"""
 
         board = observation['board']
@@ -42,26 +48,26 @@ class UserInterface():
             self.image[board[:, :, ii] == 1] = UserInterface.COLORS['blue']
         
         # build surface
-        surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
-        pygame.surfarray.blit_array(surf, self.image)
-        surf = pygame.transform.scale(surf, (self.WIDTH, self.HEIGHT))
-        surf = self._draw_grid(surf, self.image)
+        pygame.surfarray.blit_array(self.surf, self.image)
+
+    def _draw_grid(self, surf):
+        """Draw a grid onto the larger surface"""
+        
+        if self.cellsize >= 8:
+            # vertical lines
+            for r in range(self.image.shape[0]):
+                pygame.draw.line(surf, UserInterface.COLORS['gray'], (r*self.cellsize,0), (r*self.cellsize, self.WIDTH))
+
+            # horizontal
+            for c in range(self.image.shape[1]):
+                pygame.draw.line(surf, UserInterface.COLORS['gray'], (0, c*self.cellsize), (self.HEIGHT, c*self.cellsize))
 
         return surf
 
-    def _draw_grid(self, surf, image):
-        """Draw a game grid between cells"""
-
-        # vertical lines
-        for r in range(image.shape[0]):
-            pygame.draw.line(surf, UserInterface.COLORS['gray'], (r*self.cellsize,0), (r*self.cellsize, self.WIDTH))
-
-        # horizontal
-        for c in range(image.shape[1]):
-            pygame.draw.line(surf, UserInterface.COLORS['gray'], (0, c*self.cellsize), (self.HEIGHT, c*self.cellsize))
-
+    def _draw_text(self, surf, string):
+        self.text_surf = self.font.render(string, True, UserInterface.COLORS['red'])
+        surf.blit(self.text_surf,(0,0))
         return surf
-            
 
     def process_input(self):
         action = None
@@ -79,7 +85,6 @@ class UserInterface():
                 elif event.key in (pygame.K_UP,):
                     action = tron.Turn.STRAIGHT
 
-                    
         # get a user action (or from an agent) 
         return action
 
@@ -91,18 +96,22 @@ class UserInterface():
 
     def render(self, observation):
         # draw surface
-        surf = self._draw_board(observation)
-        self.window.fill(UserInterface.COLORS['white'])
-        self.window.blit(surf, (0, 0))
+        self._build_board(observation)
+
+        self.scaled_surf = pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT))
+        self.scaled_surf = self._draw_grid(self.scaled_surf)
+        self.scaled_surf = self._draw_text(self.scaled_surf, "P1: {}".format(observation['positions'][0]))
+
+        # self.window.fill(UserInterface.COLORS['white'])
+        self.window.blit(self.scaled_surf, (0, 0))
         pygame.display.update()
 
     def run(self):
+        """Game loop"""
         while not self.done:
             action = self.process_input()
             if action is not None:
-                print(action)
                 observation, done, status = self.update(action, action)
-                print(observation['positions'])
                 self.render(observation)
             self.clock.tick(60)
 
