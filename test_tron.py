@@ -49,3 +49,13 @@ class TestPlayer():
             print("Start: ({}, {}) Act: {} End: ({}, {})".format(y, x, action.name,player.y, player.x))
             np.testing.assert_equal([player.y, player.x], [yd, xd])
 
+    # TODO - test out each orientation with motion
+
+class TestTron():
+
+    def test_move():
+        
+        game = tron.Tron(size=10, num_players=1)
+        observation = game.reset()
+        
+        pass
