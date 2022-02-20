@@ -5,7 +5,9 @@ import enum
 class Status(enum.IntEnum):
     VALID = 0
     CRASH_INTO_WALL = 1
+    CRASH_INTO_TAIL = 2
     CRASH_INTO_OPPONENT = 2
+    CRASH_INTO_SELF = 3
 
 class Orientation(enum.IntEnum):
     N = 0
@@ -212,9 +214,10 @@ class Tron:
         for player, action in zip(self.players, actions):
             player.act(action)
 
-        # check if players have crashed
-        for idx, (player, opponent) in enumerate(zip(self.players, reversed(self.players))):
-            status[idx] = self._validate_player(player, opponent)
+        # check if players have crashed into anything
+        if self.num_players > 1:
+            for idx, (player, opponent) in enumerate(zip(self.players, reversed(self.players))):
+                status[idx] = self._validate_player(player, opponent)
 
         if sum(status) > 0:
             done = True
@@ -267,10 +270,7 @@ class Tron:
                 0: valid
                 1: crash into wall
         """
-        horizontal_wall = player.y < 0 or player.y >= self.size
-        vertical_wall = player.x < 0 or player.x >= self.size
-        
-        if horizontal_wall or vertical_wall:
+        if self.grid[player.y,player.x,0]:
             return Status.CRASH_INTO_WALL
         else:
             return Status.VALID
@@ -286,8 +286,9 @@ class Tron:
                 0: player is valid
                 2: player crashed into a tail
         """
-        if np.sum(self.grid, axis=2)[player.y, player.x] > 0:
-            return Status.CRASH_INTO_OPPONENT
+        # TODO - logic to check if self tail or which opponent
+        if np.sum(self.grid[:,:,1:], axis=2)[player.y, player.x] > 0:
+            return Status.CRASH_INTO_TAIL
         else:
             return Status.VALID
 

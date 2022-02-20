@@ -112,7 +112,64 @@ class TestTron():
             assert obs['board'][y,x,1] == 1
             assert np.sum(obs['board'][:,:,1]) == 2 # there is always a random starting point 
 
-    def test_move(self):
-        pass
+    def test_move_straight(self):
+        game = tron.Tron(size=10,num_players=1)
+        game.reset()
+        
+        # move forward
+        obs, done, status = game.move(0)
+        assert np.sum(obs['board'][:,:,1]) == 2
+        assert done is False
+        assert status[0] is tron.Status.VALID
+
+    def test_validate_wall_valid(self):
+        game = tron.Tron(size=100, num_players=1)
+        game.reset()
+    
+        for ii in range(10):
+            x = np.random.randint(1,100)
+            y = np.random.randint(1,100)
+            player = tron.Player(y,x,tron.Orientation.N)
+
+            status = game._validate_wall(player)
+            assert status is tron.Status.VALID
+
+    def test_validate_wall_crash(self):
+        game = tron.Tron(size=100, num_players=1)
+        game.reset()
+    
+        for ii in range(10):
+            x = np.random.randint(1,100)
+            y = 0
+            player = tron.Player(y,x,tron.Orientation.N)
+
+            status = game._validate_wall(player)
+            assert status is tron.Status.CRASH_INTO_WALL
+
+    def test_validate_tail_false(self):
+        game = tron.Tron(size=100, num_players=1)
+        for ii in range(100):
+            obs = game.reset()
+            x = obs['positions'][0][1]-1
+            y = obs['positions'][0][0]-1
+            player = tron.Player(y,x,tron.Orientation.N)
+            status = game._validate_tail(player)
+            assert status is tron.Status.VALID
+
+    def test_validate_tail_true(self):
+        game = tron.Tron(size=100, num_players=1)
+        for ii in range(100):
+            obs = game.reset()
+            x = obs['positions'][0][1]
+            y = obs['positions'][0][0]
+            player = tron.Player(y,x,tron.Orientation.N)
+            status = game._validate_tail(player)
+            assert status is tron.Status.CRASH_INTO_TAIL
+
+
+
+
+
+
 
 
