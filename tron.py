@@ -39,10 +39,10 @@ class Player:
              (0, -1), # W
              (-1, -1)] # NW
     
-    NORTH_FACING = [0, 1, 7]
+    NORTH_FACING = [7, 1, 0]
     SOUTH_FACING = [3, 4, 5]
     EAST_FACING = [1, 2, 3]
-    WEST_FACING = [7, 6, 5]
+    WEST_FACING = [5,6,7]
 
     ORIENTATION = [NORTH_FACING,
                    EAST_FACING,
@@ -55,15 +55,15 @@ class Player:
         Args:
             y (int): Y coordinate of player in grid (row)
             x (int): X coordinate of player in grid (col)
-            orientation (int): orientation of player 0 <= orientation <= 7
+            orientation (intEnum): orientation of player 0 <= orientation <= 7
         """
 
         self.x = x
         self.y = y
-        self.orientation = int(orientation)
+        self.orientation = Orientation(orientation)
         
         # save state history
-        self.states = [{'x': self.x, 'y': self.y, 'orientation': self.orientation}]
+        self.states = [{'y': self.y, 'x': self.x, 'orientation': self.orientation}]
 
     def act(self, action):
         """Rotate and move 1 unit forward
@@ -77,7 +77,7 @@ class Player:
                  2: big CW turn
         """
 
-        self.orientation = int((self.orientation + action) % 8)
+        self.orientation = Orientation((self.orientation + action) % 8)
         dy, dx = Player.STEPS[self.orientation]
         
         self.x += dx
@@ -122,31 +122,36 @@ class Tron:
         self.grid = self._define_grid()
         
         # initialize all the players
-        
-        # random location near wall
-        # random orientation away from the wall or always towards center
-        # wall_gap = np.random.randint(0, 3) # distance from wall
-        wall_gap = 2
-        # wall_distance = np.random.choise(np.arange(2*self.size - 1), self.num_players) # distance along wall boundary
-
-        # initialize half of players on top wall and other half on bottom
-        # player 1 - bottom wall
-        # player 2 - top wall
-        self.players = [ ]
-        # self.players.append(Player(self.halfsize, self.halfsize, Orientation.N))
-        # self.players.append(Player(3, 2, Orientation.S))
-        # self.num_players = 2
-        x_location = np.random.choice(np.arange(1, self.size), self.num_players)
-        for x in x_location:
-            y = np.random.choice([self.size - 1 - wall_gap, wall_gap])
-            orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
-
-            self.players.append(Player(y, x, np.random.choice(orientation_options)))
+        # self.players = self._init_players()
+        self.players = self._init_two_players()
 
         self._update()
         observation = self._get_observation()
         return observation
-    
+   
+    def _init_players(self):
+        players = []
+        
+        wall_gap = 2
+        rows = self.grid.shape[0]
+        cols = self.grid.shape[1]
+        # random locations for players on top/bottom
+        x_location = np.random.choice(np.arange(0+wall_gap, cols+1-wall_gap), self.num_players)
+        for x in x_location:
+            y = np.random.choice([wall_gap, rows-1-wall_gap])
+            orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
+
+            players.append(Player(y, x, np.random.choice(orientation_options)))
+
+        return players
+
+    def _init_two_players(self):
+        players = []
+        players.append(Player(5, 5, Orientation.E))
+        players.append(Player(75,75, Orientation.W))
+        self.num_players = 2
+        return players
+
     def _define_grid(self):
         """Define game board
         
@@ -209,7 +214,7 @@ class Tron:
         """
         done = False
         status = [Status.VALID for ii in range(self.num_players)]
-
+        
         # players are valid - move them
         for player, action in zip(self.players, actions):
             player.act(action)

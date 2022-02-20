@@ -3,15 +3,25 @@ import pygame
 
 import tron
 
+COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
+
+class Text():
+
+    def __init__(self,size=16):
+        self.font = pygame.font.Font(pygame.font.get_default_font(), size)
+
+    def draw(self, string, color=COLORS['red']):
+        return self.font.render(string, True, color)
+
 class UserInterface():
-    COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 
     def __init__(self):
 
         # instantiate the game
+        # TODO - define colors for the total number of players in game - dark variants for head
         self.game = tron.Tron(size=100, num_players=2)
         observation = self.game.reset()
-        self.done = False
+        self.running = True
     
         board = observation['board']
         rows = observation['board'].shape[0]
@@ -30,25 +40,26 @@ class UserInterface():
         self.image = np.zeros((rows, cols, 3))
         self.image.fill(255) # everything white
         # build obstacles - only once
-        self.image[board[:,:,0] == 1] = UserInterface.COLORS['black']
+        self.image[board[:,:,0] == 1] = COLORS['black']
         self.surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
         self.scaled_surf = pygame.Surface((self.WIDTH, self.HEIGHT))
 
         # text object
-        self.font = pygame.font.Font(pygame.font.get_default_font(), 32)
-        self.text_surf = self.font.render("test", True, UserInterface.COLORS['red'])
+        self.position_text = Text(size=16)
 
     def _build_board(self, observation):
-        """Turn current game state into image array for pygame"""
+        """Turn current game state into surface for pygame"""
 
         board = observation['board']
 
-        # draw players
+        # draw tails
         for ii in range(1, board.shape[2]):
-            self.image[board[:, :, ii] == 1] = UserInterface.COLORS['blue']
+            self.image[board[:, :, ii] == 1] = COLORS['blue']
         
+        # draw heads
+
         # build surface
-        pygame.surfarray.blit_array(self.surf, self.image)
+        pygame.surfarray.blit_array(self.surf, self.image.swapaxes(0, 1))
 
     def _draw_grid(self, surf):
         """Draw a grid onto the larger surface"""
@@ -56,28 +67,23 @@ class UserInterface():
         if self.cellsize >= 8:
             # vertical lines
             for r in range(self.image.shape[0]):
-                pygame.draw.line(surf, UserInterface.COLORS['gray'], (r*self.cellsize,0), (r*self.cellsize, self.WIDTH))
+                pygame.draw.line(surf, COLORS['gray'], (r*self.cellsize,0), (r*self.cellsize, self.WIDTH))
 
             # horizontal
             for c in range(self.image.shape[1]):
-                pygame.draw.line(surf, UserInterface.COLORS['gray'], (0, c*self.cellsize), (self.HEIGHT, c*self.cellsize))
+                pygame.draw.line(surf, COLORS['gray'], (0, c*self.cellsize), (self.HEIGHT, c*self.cellsize))
 
-        return surf
-
-    def _draw_text(self, surf, string):
-        self.text_surf = self.font.render(string, True, UserInterface.COLORS['red'])
-        surf.blit(self.text_surf,(0,0))
         return surf
 
     def process_input(self):
         action = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.done = True
+                self.running = False
                 break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.done = True
+                    self.running = False
                 elif event.key in (pygame.K_RIGHT,):
                     action = tron.Turn.RIGHT_90
                 elif event.key in (pygame.K_LEFT,):
@@ -98,9 +104,13 @@ class UserInterface():
         # draw surface
         self._build_board(observation)
 
-        self.scaled_surf = pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT))
+        pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT), self.scaled_surf)
         self.scaled_surf = self._draw_grid(self.scaled_surf)
-        self.scaled_surf = self._draw_text(self.scaled_surf, "P1: {}".format(observation['positions'][0]))
+        
+        # flip image
+        # self.scaled_surf = pygame.transform.flip(self.scaled_surf, False, True)
+        # add text
+        self.scaled_surf.blit(self.position_text.draw("P1: {}".format(observation['positions'][0])), (0,0))
 
         # self.window.fill(UserInterface.COLORS['white'])
         self.window.blit(self.scaled_surf, (0, 0))
@@ -108,10 +118,12 @@ class UserInterface():
 
     def run(self):
         """Game loop"""
-        while not self.done:
+        done = False
+        while self.running:
             action = self.process_input()
-            if action is not None:
+            if action is not None and not done:
                 observation, done, status = self.update(action, action)
+                print(observation['positions'][0])
                 self.render(observation)
             self.clock.tick(60)
 
