@@ -1,8 +1,16 @@
 import numpy as np
 import pygame
 import argparse
+from datetime import datetime
+try:
+    from pygame_recorder import ScreenRecorder
+    found_recorder = True
+except ImportError:
+    print("ScreenRecoder not working - probably need opencv")
+    found_recorder = False
 
 import tron
+import dumb_agent
 
 COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 COLOR_PAIRS =  [(COLORS['blue4'], COLORS['blue1']),
@@ -26,16 +34,21 @@ class Text():
 
 class UserInterface():
 
-    def __init__(self, size=100, num_players=2, width=800):
+    def __init__(self, size=100, num_players=2, width=800, human=True, 
+                 record=False, fps=30):
 
         pygame.init()
         # TODO - define colors for the total number of players in game - dark variants for head
         self.size = size
         self.num_players = num_players
         self.WIDTH = width
+        self.human = human # player 1 actions are human keyboard control
+        self.FPS = fps
+        self.RECORD = record
 
         # intialize game
         self._reset()
+
 
     def _reset(self):
         """Intialize everything"""
@@ -74,6 +87,10 @@ class UserInterface():
         pygame.display.set_caption('Tron')
         self.clock = pygame.time.Clock()
 
+        if found_recorder and self.RECORD:
+            self.recorder = ScreenRecorder(self.WIDTH, self.HEIGHT, self.FPS,
+                                           out_file="{}-output.mp4".format(datetime.now().strftime("%Y%m%dT%H%M%S")))
+
     def _build_board(self, observation):
         """Turn current game state into surface for pygame"""
 
@@ -105,6 +122,7 @@ class UserInterface():
         return surf
 
     def process_input(self):
+        actions = []
         action = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -123,11 +141,24 @@ class UserInterface():
                     # reset game
                     self._reset()
 
-        # get a user action (or from an agent) 
-        return action
+        # first action is human - rest are AI
+        # TODO - generalize to allow user functional input for agent
+        if self.human is True and action is not None:
+            actions.append(action)
+            for idx in range(1, self.num_players):
+                actions.append(dumb_agent.generate_move(self.observation['board'],
+                                                        self.observation['positions'],
+                                                        self.observation['orientations']))
+        elif self.human is False: # all AI players
+            actions = [dumb_agent.generate_move(self.observation['board'],
+                                                self.observation['positions'],
+                                                self.observation['orientations']) for ii in range(self.num_players)]
+        return actions
+
 
     def update(self, *action):
         # change game state
+        import pdb;pdb.set_trace()
         self.observation, self.done, self.status = self.game.move(*action)
 
     def render(self, string):
@@ -144,25 +175,45 @@ class UserInterface():
         self.window.blit(self.scaled_surf, (0, 0))
         pygame.display.update()
 
+        if found_recorder and self.RECORD:
+            self.recorder.capture_frame(self.window)
+    
+    def _quit(self):
+        """Close and quit"""
+
+        self.recorder.end_recording()
+        pygame.quit()
+
     def run(self):
         """Game loop"""
         while self.running:
-            action = self.process_input()
-            if action is not None and not self.done:
-                self.update(action, action)
+            actions = self.process_input()
+            if actions and not self.done:
+                self.update(*actions)
+            # TODO Use status to determine winner
             self.render("END" if self.done else "")
-            self.clock.tick(60)
-
-        pygame.quit()
+            if self.done:
+                print(self.status)
+            self.clock.tick(3)
+        
+        self._quit()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='TRON UI')
-    parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
+    parser.add_argument('--num_players', '-n', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
     parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human")
-    # TODO add parsing for the AI agent to use for the AI
-    # TODO validate number of agents = players - human players
+    parser.add_argument('--record', '-r', action='store_true', help='Record pygame visualization')
+    parser.add_argument('--fps, '-f', type=int, default=30, help='Change visualization FPS')
 
+    # TODO add parsing for the AI agent to use for the AI
+
+
+    # TODO validate number of agents = players - human players
     args = parser.parse_args()
-    ui = UserInterface(size=args.size, num_players=args.players)
+    if args.num_players != 2:
+        print("Only 2 players fully working")
+        args.num_players = 2
+
+    ui = UserInterface(size=args.size, num_players=args.num_players, record=args.record)
     ui.run()
