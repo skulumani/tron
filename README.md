@@ -5,6 +5,11 @@ Based on hexatron but improved
 
 # Battles
 
+Vary start position
+Vary map shape/size
+Vary obstacles inside the map
+Add point goals inside map (powerups)
+
 ## 2 way
 
 1. AI vs. random controller
@@ -12,6 +17,7 @@ Based on hexatron but improved
 3. AI vs. AI
 4. AI vs. optimal controller
 1. AI vs. dumb controller
+
 ## n way
 
 1. AI vs. n x AI
