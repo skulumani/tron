@@ -131,19 +131,16 @@ class Tron:
         # player 1 - bottom wall
         # player 2 - top wall
         self.players = [ ]
-        self.players.append(Player(self.halfsize, self.halfsize, Orientation.N))
-        self.players.append(Player(3, 2, Orientation.S))
-        self.num_players = 2
-        # x_location = np.random.choice(np.arange(1, self.size), self.num_players)
-        # for x in x_location:
-        #     y = np.random.choice([self.size - 1 - wall_gap, wall_gap])
-        #     orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
+        # self.players.append(Player(self.halfsize, self.halfsize, Orientation.N))
+        # self.players.append(Player(3, 2, Orientation.S))
+        # self.num_players = 2
+        x_location = np.random.choice(np.arange(1, self.size), self.num_players)
+        for x in x_location:
+            y = np.random.choice([self.size - 1 - wall_gap, wall_gap])
+            orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
 
-        #     self.players.append(Player(y, x, np.random.choice(orientation_options)))
+            self.players.append(Player(y, x, np.random.choice(orientation_options)))
 
-        #     # self.players = [
-        #     #     Player(np.random.randint(0, self.size), self.size - 1 - wall_gap, np.random.choice([0, 1, 2, 6, 7])),
-        #     #     Player(np.random.randint(0, self.size), wall_gap, np.random.choice([2, 3, 4, 5, 6]))]
         self._update()
         observation = self._get_observation()
         return observation
@@ -180,8 +177,8 @@ class Tron:
                     m: y coordinate - positive down
                     n: x coordinate - positive right
                     p: player locations
-                - positions (tuple): tuple of each player current coordinates
-                - orientations (tuple): tuple of each player orientation
+                - positions (list): tuple (y, x) of each player current coordinates
+                - orientations (tuple): tuple of length num_players of each player orientation
         """
         observation = {
             'board': self.grid.copy(),
