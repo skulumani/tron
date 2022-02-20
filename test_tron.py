@@ -50,12 +50,23 @@ class TestPlayer():
             np.testing.assert_equal([player.y, player.x], [yd, xd])
 
     # TODO - test out each orientation with motion
+    
+    def test_front_crash_false(self):
+        for ii in range(100):
+            x = np.random.randint(0,100)
+            y = np.random.randint(0, 100)
+            player1 = tron.Player(y,x, tron.Orientation.N)
+            player2 = tron.Player(y+np.random.randint(1,5),x+np.random.randint(1,5), tron.Orientation.N)
+            assert player1.front_crash(player2) is False
+            assert player2.front_crash(player1) is False
 
+    def test_front_crash_true(self):
+        pass
 class TestTron():
 
-    def test_move():
+    def test_move(self):
         
-        game = tron.Tron(size=10, num_players=1)
-        observation = game.reset()
+        # game = tron.Tron(size=10, num_players=1)
+        # observation = game.reset()
         
         pass
