@@ -122,8 +122,8 @@ class Tron:
         self.grid = self._define_grid()
         
         # initialize all the players
-        # self.players = self._init_players()
-        self.players = self._init_two_players()
+        self.players = self._init_players()
+        # self.players = self._init_two_players()
 
         self._update()
         observation = self._get_observation()
@@ -137,8 +137,9 @@ class Tron:
         cols = self.grid.shape[1]
         # random locations for players on top/bottom
         x_location = np.random.choice(np.arange(0+wall_gap, cols+1-wall_gap), self.num_players)
-        for x in x_location:
-            y = np.random.choice([wall_gap, rows-1-wall_gap])
+        y_location = [wall_gap, rows-1-wall_gap]
+        for idx,x in enumerate(x_location):
+            y = y_location[idx % 2]
             orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
 
             players.append(Player(y, x, np.random.choice(orientation_options)))
