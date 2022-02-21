@@ -57,10 +57,11 @@ class UserInterface():
             self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in range(0, self.num_players)]
         elif self.num_players <= len(COLOR_PAIRS):    
             self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(1,len(COLOR_PAIRS)), self.num_players)]
-            # first player is always blue
-            self.player_colors[0] = {'head': COLOR_PAIRS[0][0], 'tail': COLOR_PAIRS[0][1]}
         else:
             self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), (self.num_players, 2))]
+
+        # first player is always blue
+        self.player_colors[0] = {'head': COLOR_PAIRS[0][0], 'tail': COLOR_PAIRS[0][1]}
     
         board = self.observation['board']
         rows = self.observation['board'].shape[0]
@@ -72,7 +73,7 @@ class UserInterface():
         # intialize image array and surface
         self.image = np.zeros((rows, cols, 3))
         self.image.fill(255) # everything white
-        # build obstacles - only once
+        # build obstacles
         self.image[board[:,:,0] == 1] = COLORS['black']
         self.surf = pygame.Surface((self.image.shape[0], self.image.shape[1]))
         self.scaled_surf = pygame.Surface((self.WIDTH, self.HEIGHT))
@@ -89,13 +90,30 @@ class UserInterface():
 
         board = observation['board']
         positions = observation['positions']
+        orientations = observation['orientations']
+        
+        # set all white
+        self.image.fill(255)
+
+        # draw walls v
+        self.image[board[:,:,0] == 1] = COLORS['black']
+
+        # draw heads
+        for p, o, color_dict in zip(positions, orientations, self.player_colors):
+            self.image[p[0],p[1],:] = color_dict['head']
+            # draw possible steps
+            # iterate through Steps[turns + current orientation]
+            for t in tron.Turn:
+                # get future square and color
+                (y, x, orientation) = tron.Player.future_move(p[0], p[1], o, t)
+                # don't draw if any point outside grid
+                if y < self.image.shape[0] and x < self.image.shape[1] and y >= 0 and x >= 0:
+                    self.image[y,x,:] = COLORS['lightyellow1']
+
         # draw tails
         for idx, color_dict in enumerate(self.player_colors):
             self.image[board[:, :, idx+1] == 1] = color_dict['tail']
         
-        # draw heads
-        for p, color_dict in zip(positions, self.player_colors):
-            self.image[p[0],p[1],:] = color_dict['head']
 
         # build surface
         pygame.surfarray.blit_array(self.surf, self.image.swapaxes(0, 1))
