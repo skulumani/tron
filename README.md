@@ -26,6 +26,7 @@ Add point goals inside map (powerups)
 
 # TODO 
 
+* [ ] no more 45 degree moves
 * [ ] unit tests for player and game grid - make sure motion works as expected
 * [ ] test for visualization
 * [ ] pygame human player interface

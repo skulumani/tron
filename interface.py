@@ -199,7 +199,6 @@ class UserInterface():
             if actions and not self.done:
                 self.update(*actions)
             # TODO Use status to determine winner - only single player with valid status
-            # TODO only render when there's an action - reduce updates
             self.render("END" if self.done else "")
             self.clock.tick(3)
         
@@ -214,7 +213,6 @@ if __name__ == "__main__":
     parser.add_argument('--fps', '-f', type=int, default=30, help='Change visualization FPS')
 
     # TODO add parsing for the AI agent to use for the AI
-
 
     # TODO validate number of agents = players - human players
     args = parser.parse_args()

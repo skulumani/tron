@@ -241,10 +241,9 @@ class Tron:
         status = [status[idx] + self._validate_wall(p) for idx,p in enumerate(self.players)]
 
         # check if players have crashed into others
-        # import pdb;pdb.set_trace()
         for idx, (p, o) in enumerate(permutations(self.players, r=2)):
             # TODO Need to check which o current p crashed into and save
-            if status[idx//(self.num_players-1)] == Status.VALID:
+            if p.status == Status.VALID and status[idx//(self.num_players-1)] == Status.VALID:
                 status[idx//(self.num_players-1)] = self._validate_player(p, o)
 
         # update player status
@@ -252,7 +251,8 @@ class Tron:
             p.status = s
 
         # TODO: done only when single player is remaining
-        if sum(status) > 0:
+        status_array = np.array(status)
+        if  len(status_array[status_array == 0]) == 1:
             done = True
 
         if not done:
