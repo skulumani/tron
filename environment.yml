@@ -4,14 +4,14 @@ channels:
   - conda-forge
   - cogsci
 dependencies:
-  - python
+  - python=3.9
   - numpy
   - ipython
   - matplotlib
   - pytest
   - pip
-  - pygame
+  - typing_extensions
   - pip:
     # - -r requirements.txt
-    # - pygame
+    - pygame
 
