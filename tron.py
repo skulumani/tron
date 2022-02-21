@@ -299,7 +299,7 @@ class Tron:
         """
         # check if outside game board
         rows, cols = self.grid.shape[0], self.grid.shape[1]
-        if player.y >= rows or player.x >= cols:
+        if player.y >= rows or player.x >= cols or player.y <= 0 or player.x <= 0: # exterior wall
             return Status.CRASH_INTO_WALL
         elif self.grid[player.y,player.x,0]: # obstacles in map
             return Status.CRASH_INTO_WALL
