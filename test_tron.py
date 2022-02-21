@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from itertools import combinations
 
 import tron
 
@@ -167,7 +168,18 @@ class TestTron():
             assert status is tron.Status.CRASH_INTO_TAIL
     
     def test_validate_n_players(self):
-        game = tron.Tron(size=100, num_players=3)
+        game = tron.Tron(size=50, num_players=4)
+        actions = [tron.Turn.STRAIGHT for i in range(game.num_players)]
+        # MUST move players to avoid checking themselves
+        obs = game.reset()
+        obs, done, status = game.move(*actions)
+        # ranomly assigning player locations to motion might cause collisions
+        # large grid tries to reduce this probablity
+        assert sum(status) == 0
+
+
+            
+        
 
 
 

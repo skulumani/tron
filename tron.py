@@ -1,14 +1,14 @@
 import numpy as np
 import enum 
-from itertools import combinations
+from itertools import combinations, permutations
 
 
 class Status(enum.IntEnum):
     VALID = 0
     CRASH_INTO_WALL = 1
     CRASH_INTO_TAIL = 2
-    CRASH_INTO_OPPONENT = 2
-    CRASH_INTO_SELF = 3
+    CRASH_INTO_OPPONENT = 3
+    CRASH_INTO_SELF = 4
 
 class Orientation(enum.IntEnum):
     N = 0
@@ -50,7 +50,7 @@ class Player:
                    SOUTH_FACING,
                    WEST_FACING]
 
-    def __init__(self, y, x, orientation):
+    def __init__(self, y, x, orientation, uid=1, status=Status.VALID):
         """Constructor
 
         Args:
@@ -59,9 +59,11 @@ class Player:
             orientation (intEnum): orientation of player 0 <= orientation <= 7
         """
 
+        self.uid = uid
         self.x = x
         self.y = y
         self.orientation = Orientation(orientation)
+        self.status = status
         
         # save state history
         self.states = [{'y': self.y, 'x': self.x, 'orientation': self.orientation}]
@@ -97,7 +99,14 @@ class Player:
         """
 
         crash = self.x == opponent.x and self.y == opponent.y
-        return crash
+        if crash:
+            return Status.CRASH_INTO_OPPONENT
+        else:
+            return Status.VALID
+
+    def state(self):
+        """Return state as tuple"""
+        return {'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid}
 
 class Tron:
     """Define game board and collisions"""
@@ -133,17 +142,17 @@ class Tron:
     def _init_players(self):
         players = []
         
-        wall_gap = 2
+        wall_gap = self.size // 10
         rows = self.grid.shape[0]
         cols = self.grid.shape[1]
         # random locations for players on top/bottom
-        x_location = np.random.choice(np.arange(0+wall_gap, cols+1-wall_gap), self.num_players)
-        y_location = [wall_gap, rows-1-wall_gap]
+        x_location = np.random.randint(1+wall_gap, cols-wall_gap-1, self.num_players)
+        y_location = [1+wall_gap, rows-1-wall_gap]
         for idx,x in enumerate(x_location):
             y = y_location[idx % 2]
             orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
 
-            players.append(Player(y, x, np.random.choice(orientation_options)))
+            players.append(Player(y, x, np.random.choice(orientation_options), uid=idx+1))
 
         return players
 
@@ -174,8 +183,9 @@ class Tron:
 
     def _update(self):
         """Define player positions in the grid"""
+        # TODO: only move players in valid state
         for idx, player in enumerate(self.players):
-            self.grid[player.y, player.x, idx+1] = 1
+            self.grid[player.y, player.x, player.uid] = 1
 
     def _get_observation(self):
         """Return representation of game
@@ -215,26 +225,34 @@ class Tron:
                 2: player crashed into another tail
         """
         done = False
+
         status = [Status.VALID for ii in range(self.num_players)]
         
-        # players are valid - move them
+        # players are valid - move them first
         for player, action in zip(self.players, actions):
-            player.act(action)
+            if player.status == Status.VALID:
+                player.act(action)
+        
+        # check each player against the walls
+        status = [status[idx] + self._validate_wall(p) for idx,p in enumerate(self.players)]
 
-        # check if players have crashed into anything
-        if self.num_players > 1:
-            for idx, (player, opponent) in enumerate(combinations(self.players, 2)):
-            # for idx, (player, opponent) in enumerate(zip(self.players, reversed(self.players))):
-                import pdb;pdb.set_trace() 
-                # TODO skip checking player against itself
-                # TODO need to check if each player is valid against all others (pair wise permutations)
-                status[idx] = self._validate_player(player, opponent)
+        # check if players have crashed into others
+        # import pdb;pdb.set_trace()
+        for idx, (p, o) in enumerate(permutations(self.players, r=2)):
+            # TODO Need to check which o current p crashed into and save
+            if status[idx//(self.num_players-1)] == Status.VALID:
+                status[idx//(self.num_players-1)] = self._validate_player(p, o)
 
+        # update player status
+        for s,p in zip(status, self.players):
+            p.status = s
+
+        # TODO: done only when single player is remaining
         if sum(status) > 0:
             done = True
 
         if not done:
-            self._update() # update each player
+            self._update() # update game board
 
         observation = self._get_observation()
         return observation, done, status
@@ -251,17 +269,11 @@ class Tron:
                 1: crash into wall
                 2: crash into tail
         """
-        status = 0
+        status = Status.VALID
 
-        # check for crash into wall
-        status = self._validate_wall(player)
-
-        if status > 0:
-            return status
-
-        # check crash into a tail
+        # check crash into any tails
         status = self._validate_tail(player)
-
+        
         if status > 0:
             return status
 
@@ -281,7 +293,11 @@ class Tron:
                 0: valid
                 1: crash into wall
         """
-        if self.grid[player.y,player.x,0]:
+        # check if outside game board
+        rows, cols = self.grid.shape[0], self.grid.shape[1]
+        if player.y >= rows or player.x >= cols:
+            return Status.CRASH_INTO_WALL
+        elif self.grid[player.y,player.x,0]: # obstacles in map
             return Status.CRASH_INTO_WALL
         else:
             return Status.VALID
@@ -297,8 +313,11 @@ class Tron:
                 0: player is valid
                 2: player crashed into a tail
         """
-        # TODO - logic to check if self tail or which opponent
-        if np.sum(self.grid[:,:,1:], axis=2)[player.y, player.x] > 0:
+        all_opponents = np.array([p.uid for p in self.players])
+        all_opponents = all_opponents[all_opponents != player.uid]
+        if self.grid[player.y,player.x,player.uid] > 0:
+            return Status.CRASH_INTO_SELF
+        elif np.sum(self.grid[player.y, player.x, all_opponents]) > 0:
             return Status.CRASH_INTO_TAIL
         else:
             return Status.VALID
