@@ -29,9 +29,9 @@ def get_stochastic_command():
     """Go forward mostly but sometimes turn"""
     rand = np.random.rand()
     if rand < 0.2:
-        move = tron.Turn.LEFT_45
+        move = tron.Turn.LEFT_90
     elif rand > 0.8:
-        move = tron.Turn.RIGHT_45
+        move = tron.Turn.RIGHT_90
     else:
         move = tron.Turn.STRAIGHT
 

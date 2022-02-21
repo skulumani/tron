@@ -17,30 +17,12 @@ class TestPlayer():
         y = np.random.randint(0, 50)
         orientation = tron.Orientation.N # north facing
         steps = [(0, -1), # W 
-                 (-1, -1), # NW
+                 # (-1, -1), # NW
                  (-1, 0), #N
-                 (-1, 1), # NE
+                 # (-1, 1), # NE
                  (0, 1)] # E
-
-        for action, step in zip(list(tron.Turn), steps):
-            player = tron.Player(y, x, orientation)
-            player.act(action)
-            dy, dx = step
-            yd = y + dy
-            xd = x + dx
-            print("Start: ({}, {}) Act: {} End: ({}, {})".format(y, x, action.name,player.y, player.x))
-            np.testing.assert_equal([player.y, player.x], [yd, xd])
-
-    def test_north_east_motion(self):
-        x = np.random.randint(0, 50)
-        y = np.random.randint(0, 50)
-        orientation = tron.Orientation.NE 
-        steps = [(-1, -1), # NW 
-                 (-1, 0), # N
-                 (-1, 1), # NE
-                 (0, 1), # E
-                 (1, 1)] # SE
-
+        
+        # import pdb; pdb.set_trace()
         for action, step in zip(list(tron.Turn), steps):
             player = tron.Player(y, x, orientation)
             player.act(action)
@@ -55,11 +37,11 @@ class TestPlayer():
     def test_front_crash_false(self):
         for ii in range(100):
             x = np.random.randint(0,100)
-            y = np.random.randint(0, 100)
-            player1 = tron.Player(y,x, tron.Orientation.N)
+            y = np.random.randint(0,100)
+            player1 = tron.Player(y, x, tron.Orientation.N)
             player2 = tron.Player(y+np.random.randint(1,5),x+np.random.randint(1,5), tron.Orientation.N)
-            assert player1.front_crash(player2) is False
-            assert player2.front_crash(player1) is False
+            assert player1.front_crash(player2) is tron.Status.VALID
+            assert player2.front_crash(player1) is tron.Status.VALID
 
     def test_front_crash_true(self):
         for ii in range(100):
@@ -67,8 +49,8 @@ class TestPlayer():
             y = np.random.randint(0, 100)
             player1 = tron.Player(y,x, tron.Orientation.N)
             player2 = tron.Player(y,x, tron.Orientation.N)
-            assert player1.front_crash(player2) is True
-            assert player2.front_crash(player1) is True
+            assert player1.front_crash(player2) is tron.Status.CRASH_INTO_OPPONENT
+            assert player2.front_crash(player1) is tron.Status.CRASH_INTO_OPPONENT
 
 class TestTron():
 
@@ -118,7 +100,8 @@ class TestTron():
         game.reset()
         
         # move forward
-        obs, done, status = game.move(0)
+        obs, done, status = game.move(tron.Turn.STRAIGHT)
+
         assert np.sum(obs['board'][:,:,1]) == 2
         assert done is False
         assert status[0] is tron.Status.VALID
@@ -128,8 +111,8 @@ class TestTron():
         game.reset()
     
         for ii in range(10):
-            x = np.random.randint(1,100)
-            y = np.random.randint(1,100)
+            x = np.random.randint(1,99)
+            y = np.random.randint(1,99)
             player = tron.Player(y,x,tron.Orientation.N)
 
             status = game._validate_wall(player)
@@ -165,7 +148,7 @@ class TestTron():
             y = obs['positions'][0][0]
             player = tron.Player(y,x,tron.Orientation.N)
             status = game._validate_tail(player)
-            assert status is tron.Status.CRASH_INTO_TAIL
+            assert status > 0
     
     def test_validate_n_players(self):
         game = tron.Tron(size=50, num_players=4)

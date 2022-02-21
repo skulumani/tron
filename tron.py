@@ -22,9 +22,9 @@ class Orientation(enum.IntEnum):
 
 class Turn(enum.IntEnum):
     LEFT_90 = -2
-    LEFT_45 = -1
+    # LEFT_45 = -1
     STRAIGHT = 0
-    RIGHT_45 = 1
+    # RIGHT_45 = 1
     RIGHT_90 = 2
 
 # TODO add a mapping from (x,y) to numpy grid location
@@ -38,12 +38,13 @@ class Player:
              (1, 0), # S
              (1, -1), # SW
              (0, -1), # W
-             (-1, -1)] # NW
+             (-1, -1) # NW
+             ]
     
-    NORTH_FACING = [7, 1, 0]
-    SOUTH_FACING = [3, 4, 5]
-    EAST_FACING = [1, 2, 3]
-    WEST_FACING = [5,6,7]
+    NORTH_FACING = [0]
+    SOUTH_FACING = [4]
+    EAST_FACING = [2]
+    WEST_FACING = [6]
 
     ORIENTATION = [NORTH_FACING,
                    EAST_FACING,
@@ -85,7 +86,7 @@ class Player:
    
     @staticmethod
     def future_move(y, x, orientation, action):
-        orientation = Orientation((orientation + action) % 8)
+        orientation = Orientation((orientation + action) % len(Orientation))
         dy, dx = Player.STEPS[orientation]
         
         x += dx
@@ -195,7 +196,7 @@ class Tron:
         """Return representation of game
 
         Returns:
-            observation (dict): Dictionary
+            observation (dict): Current game state 
                 - board (np.array): nD array representing game board m x n x p
                     m: y coordinate - positive down
                     n: x coordinate - positive right
@@ -213,11 +214,9 @@ class Tron:
         """Move all the players
 
         Args:
-            actions (List[int]): List of actions for each player
+            actions (List[int]): List of actions for each player - Turn enumeration
                 -2: large CCW turn
-                -1: small CCW turn
                  0: no turn - straight
-                 1: small CW turn
                  2: big CW turn
 
         Returns:
@@ -229,7 +228,6 @@ class Tron:
                 2: player crashed into another tail
         """
         done = False
-
         status = [Status.VALID for ii in range(self.num_players)]
         
         # players are valid - move them first
@@ -237,23 +235,29 @@ class Tron:
             if player.status == Status.VALID:
                 player.act(action)
         
-        # check each player against the walls
-        status = [status[idx] + self._validate_wall(p) for idx,p in enumerate(self.players)]
-
-        # check if players have crashed into others
-        for idx, (p, o) in enumerate(permutations(self.players, r=2)):
+        # check each player against the walls/tails
+        if self.num_players == 1:
+            status[0] = self._validate_wall(self.players[0])
+            status[0] = self._validate_tail(self.players[0]) if status[0] == Status.VALID else status[0]
+        else:
+            status = [Status(status[idx] + self._validate_wall(p)) for idx,p in enumerate(self.players)]
+            # check if players have crashed into others
             # TODO Need to check which o current p crashed into and save
-            if p.status == Status.VALID and status[idx//(self.num_players-1)] == Status.VALID:
-                status[idx//(self.num_players-1)] = self._validate_player(p, o)
-
+            for idx, (p, o) in enumerate(permutations(self.players, r=2)):
+                if p.status == Status.VALID and status[idx//(self.num_players-1)] == Status.VALID:
+                    status[idx//(self.num_players-1)] = self._validate_player(p, o)
+        
         # update player status
         for s,p in zip(status, self.players):
             p.status = s
 
-        # TODO: done only when single player is remaining
+        # done only when single player is remaining - when not singleplayer
         status_array = np.array(status)
-        if  len(status_array[status_array == 0]) == 1:
+        if self.num_players == 1:
+            done = True if status_array > 0 else False
+        elif len(status_array[status_array == 0]) == 1 and self.num_players > 1:
             done = True
+
 
         if not done:
             self._update() # update game board

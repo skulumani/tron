@@ -144,9 +144,9 @@ class UserInterface():
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     self.running = False
                 elif event.key in (pygame.K_RIGHT,):
-                    action = tron.Turn.RIGHT_45
+                    action = tron.Turn.RIGHT_90
                 elif event.key in (pygame.K_LEFT,):
-                    action = tron.Turn.LEFT_45
+                    action = tron.Turn.LEFT_90
                 elif event.key in (pygame.K_UP,):
 
                     action = tron.Turn.STRAIGHT
