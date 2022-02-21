@@ -79,14 +79,18 @@ class Player:
                  1: small CW turn
                  2: big CW turn
         """
-
-        self.orientation = Orientation((self.orientation + action) % 8)
-        dy, dx = Player.STEPS[self.orientation]
-        
-        self.x += dx
-        self.y += dy
+        (self.y, self.x, self.orientation) = Player.future_move(self.y, self.x, self.orientation,action)
 
         self.states.append({'x': self.x, 'y': self.y, 'orientation': self.orientation})
+   
+    @staticmethod
+    def future_move(y, x, orientation, action):
+        orientation = Orientation((orientation + action) % 8)
+        dy, dx = Player.STEPS[orientation]
+        
+        x += dx
+        y += dy
+        return (y,x,orientation)
 
     def front_crash(self, opponent):
         """Check if player crashes into opponents head
