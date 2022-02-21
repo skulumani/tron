@@ -190,7 +190,7 @@ class UserInterface():
             actions = self.process_input()
             if actions and not self.done:
                 self.update(*actions)
-            # TODO Use status to determine winner
+            # TODO Use status to determine winner - only single player with valid status
             self.render("END" if self.done else "")
             if self.done:
                 print(self.status)

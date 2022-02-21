@@ -1,5 +1,6 @@
 import numpy as np
 import enum 
+from itertools import combinations
 
 
 class Status(enum.IntEnum):
@@ -222,7 +223,11 @@ class Tron:
 
         # check if players have crashed into anything
         if self.num_players > 1:
-            for idx, (player, opponent) in enumerate(zip(self.players, reversed(self.players))):
+            for idx, (player, opponent) in enumerate(combinations(self.players, 2)):
+            # for idx, (player, opponent) in enumerate(zip(self.players, reversed(self.players))):
+                import pdb;pdb.set_trace() 
+                # TODO skip checking player against itself
+                # TODO need to check if each player is valid against all others (pair wise permutations)
                 status[idx] = self._validate_player(player, opponent)
 
         if sum(status) > 0:
