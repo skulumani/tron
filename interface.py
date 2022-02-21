@@ -56,7 +56,9 @@ class UserInterface():
         if self.num_players <= 2:
             self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in range(0, self.num_players)]
         elif self.num_players <= len(COLOR_PAIRS):    
-            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(0,len(COLOR_PAIRS)), self.num_players)]
+            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(1,len(COLOR_PAIRS)), self.num_players)]
+            # first player is always blue
+            self.player_colors[0] = {'head': COLOR_PAIRS[0][0], 'tail': COLOR_PAIRS[0][1]}
         else:
             self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), (self.num_players, 2))]
     
@@ -178,7 +180,6 @@ class UserInterface():
             actions = self.process_input()
             if actions and not self.done:
                 self.update(*actions)
-                print(self.observation['positions'])
             # TODO Use status to determine winner - only single player with valid status
             # TODO only render when there's an action - reduce updates
             self.render("END" if self.done else "")
