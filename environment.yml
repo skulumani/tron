@@ -4,16 +4,12 @@ channels:
   - conda-forge
   - cogsci
 dependencies:
-  - python=3.4
+  - python
   - numpy
   - ipython
   - matplotlib
-  - scipy
   - pytest
-  - pytest-cov
-  - coverage
   - pip
-  - opencv
   - pygame
   - pip:
     # - -r requirements.txt

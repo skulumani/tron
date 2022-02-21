@@ -165,6 +165,10 @@ class TestTron():
             player = tron.Player(y,x,tron.Orientation.N)
             status = game._validate_tail(player)
             assert status is tron.Status.CRASH_INTO_TAIL
+    
+    def test_validate_n_players(self):
+        game = tron.Tron(size=100, num_players=3)
+
 
 
 

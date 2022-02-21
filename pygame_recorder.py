@@ -14,8 +14,9 @@ class ScreenRecorder:
         :param fps: Frames per second
         :param out_file: Output file to save the recording
         """
-        print(f'Initializing ScreenRecorder with parameters width:{width} height:{height} fps:{fps}.')
-        print(f'Output of the screen recording saved to {out_file}.')
+        # print("Initializing ScreenRecorder with parameters width:{width} height:{height} fps:{fps}.".format(
+        #         width=width, height=height,fps=fps)
+        # print("Output of the screen recording saved to {out_file}.".format(outfile=outfile))
 
         # define the codec and create a video writer object
         four_cc = cv2.VideoWriter_fourcc(*'XVID')

@@ -180,8 +180,8 @@ class UserInterface():
     
     def _quit(self):
         """Close and quit"""
-
-        self.recorder.end_recording()
+        if self.RECORD:
+            self.recorder.end_recording()
         pygame.quit()
 
     def run(self):
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
     parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human")
     parser.add_argument('--record', '-r', action='store_true', help='Record pygame visualization')
-    parser.add_argument('--fps, '-f', type=int, default=30, help='Change visualization FPS')
+    parser.add_argument('--fps', '-f', type=int, default=30, help='Change visualization FPS')
 
     # TODO add parsing for the AI agent to use for the AI
 
