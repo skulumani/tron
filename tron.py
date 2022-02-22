@@ -229,7 +229,8 @@ class Tron:
         """
         done = False
         status = [Status.VALID for ii in range(self.num_players)]
-        
+       
+        # TODO: Fix logic for ending game with n > 2 players
         # players are valid - move them first
         for player, action in zip(self.players, actions):
             if player.status == Status.VALID:
@@ -249,7 +250,8 @@ class Tron:
         
         # update player status
         for s,p in zip(status, self.players):
-            p.status = s
+            if s != Status.VALID:
+                p.status = s
 
         # done only when single player is remaining - when not singleplayer
         status_array = np.array(status)

@@ -148,11 +148,13 @@ class UserInterface():
                 elif event.key in (pygame.K_LEFT,):
                     action = tron.Turn.LEFT_90
                 elif event.key in (pygame.K_UP,):
-
                     action = tron.Turn.STRAIGHT
                 elif event.key in (pygame.K_r,):
                     # reset game
                     self._reset()
+                elif event.key in (pygame.K_p,):
+                    # print complete game state
+                    pass
 
         # first action is human - rest are AI
         # TODO - generalize to allow user functional input for agent
@@ -216,6 +218,6 @@ if __name__ == "__main__":
 
     # TODO validate number of agents = players - human players
     args = parser.parse_args()
-
-    ui = UserInterface(size=args.size, num_players=args.num_players, record=args.record)
+    ui = UserInterface(size=args.size, num_players=args.num_players, record=args.record, 
+                       human=args.interactive)
     ui.run()
