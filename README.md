@@ -26,13 +26,18 @@ Add point goals inside map (powerups)
 
 # TODO 
 
-* [ ] no more 45 degree moves
-* [ ] unit tests for player and game grid - make sure motion works as expected
-* [ ] test for visualization
-* [ ] pygame human player interface
+* [x] no more 45 degree moves
+* [.] unit tests for player and game grid - make sure motion works as expected
+* [-] test for visualization
+* [x] pygame human player interface
+* [ ] automated testing - save state to some file and playback/print stats
 * [ ] replay interface - read saved game data
 * [ ] pygame recorder
-* [ ] automated testing - save state to binary data structure
+* [ ] ensure game end logic works in all situations
+    * 1, 2, and n players
+    * crash into heads
+    * crash into tails
+    * crash into walls
 
 # References
 

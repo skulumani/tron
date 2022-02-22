@@ -16,8 +16,8 @@ def generate_move(board, positions, orientations):
         move (int): Integer move command from tron.Turn
     """
 
-    # move = get_forward_command()
-    move = get_stochastic_command()
+    move = get_forward_command()
+    # move = get_stochastic_command()
     return move
 
 def get_forward_command():
@@ -28,9 +28,9 @@ def get_forward_command():
 def get_stochastic_command():
     """Go forward mostly but sometimes turn"""
     rand = np.random.rand()
-    if rand < 0.2:
+    if rand < 0.1:
         move = tron.Turn.LEFT_90
-    elif rand > 0.8:
+    elif rand > 0.9:
         move = tron.Turn.RIGHT_90
     else:
         move = tron.Turn.STRAIGHT

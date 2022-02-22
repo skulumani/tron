@@ -153,8 +153,9 @@ class UserInterface():
                     # reset game
                     self._reset()
                 elif event.key in (pygame.K_p,):
-                    # print complete game state
-                    pass
+                    # print states of each player
+                    print(self.game.players[0].states)
+                    
 
         # first action is human - rest are AI
         # TODO - generalize to allow user functional input for agent
