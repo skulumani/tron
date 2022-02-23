@@ -1,6 +1,10 @@
 import numpy as np
 import enum 
 from itertools import combinations, permutations
+from datetime import datetime
+import json
+
+import utilities
 
 
 class Status(enum.IntEnum):
@@ -27,7 +31,6 @@ class Turn(enum.IntEnum):
     # RIGHT_45 = 1
     RIGHT_90 = 2
 
-# TODO add a mapping from (x,y) to numpy grid location
 class Player:
     # movement possible - square grid - diagonals possible
     # (dy, dx) 
@@ -67,7 +70,7 @@ class Player:
         self.status = status
         
         # save state history
-        self.states = [{'y': self.y, 'x': self.x, 'orientation': self.orientation}]
+        self.states = [{'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid, 'status':self.status}]
 
     def act(self, action):
         """Rotate and move 1 unit forward
@@ -81,8 +84,7 @@ class Player:
                  2: big CW turn
         """
         (self.y, self.x, self.orientation) = Player.future_move(self.y, self.x, self.orientation,action)
-
-        self.states.append({'x': self.x, 'y': self.y, 'orientation': self.orientation})
+        self.states.append({'x': self.x, 'y': self.y, 'orientation': self.orientation, 'uid': self.uid, 'status': self.status})
    
     @staticmethod
     def future_move(y, x, orientation, action):
@@ -111,7 +113,7 @@ class Player:
 
     def state(self):
         """Return state as tuple"""
-        return {'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid}
+        return {'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid, 'status': self.status}
 
 class Tron:
     """Define game board and collisions"""
@@ -157,7 +159,7 @@ class Tron:
             y = y_location[idx % 2]
             orientation_options = Player.NORTH_FACING if y > self.halfsize else Player.SOUTH_FACING
 
-            players.append(Player(y, x, np.random.choice(orientation_options), uid=idx+1))
+            players.append(Player(int(y), int(x), np.random.choice(orientation_options), uid=idx+1))
 
         return players
 
@@ -348,6 +350,37 @@ class Tron:
         else:
             Status.VALID
 
+    def save(self, start_time=datetime.now()):
+        """Save the game history to file
+        
+        Args:
+            start_time (datetime): Time to append to the filename - defaults to now()
+        """
+        with open("{}_tron.json".format(start_time.strftime("%Y%m%d-%H%M%S")), 'w') as file:
+            json.dump({'grid': self.grid,
+                       'states': [p.states for p in self.players]}, file, indent=4, cls=utilities.NumpyEncoder) 
+
+    @staticmethod
+    def load(filename):
+        """Load a game
+
+        Args:
+            filename (str): name of json file to load
+
+        Returns:
+            grid (np.array): Game board
+            states (list): list of player states. Each is a list for the game with dict elements
+                x: x position
+                y: y position
+                orientation: orientation from Orientation enum
+                uid: player UID
+                status: status falg from Status enum
+        """
+        with open(filename, 'r') as file:
+            data = json.load(file)
+
+        # break out into useful variables
+        return np.array(data['grid']), data['states']
 
 if __name__ == "__main__":
     tron = Tron(size=10, num_players=1)
