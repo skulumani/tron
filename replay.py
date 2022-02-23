@@ -157,15 +157,13 @@ class ReplayInterface():
 
         self._quit()
 
-
-# load a game from command line argument
-# determine total number of steps
-# keyboard right will increment step counter
-# render all steps from 0 to counter
-# left keyboard goes down in step counter
 # contiuous keypress capable
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="TRON REPLAY - Replay games. Keyboard left/right to step, r reset, q/esc quit")
+    parser.add_argument("save_game", nargs=1, help="Replay save file", type=str)
+    args = parser.parse_args()
+
     replay = ReplayInterface()
-    replay.load('20220222-213143_tron.json')
+    replay.load(args.save_game[0])
     replay.run()
 
