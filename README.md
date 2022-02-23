@@ -38,6 +38,21 @@ Add point goals inside map (powerups)
     * crash into heads
     * crash into tails
     * crash into walls
+    * done flag sometimes not set when everyone dies on same move - check for all dead on same move 
+        * done - but it's  draw
+* [ ] End game when any player crashes but then restart game with remaining players and same state and continue
+* [ ] Automated way to decide on who's the winner after game is done
+    * Look at number of states/steps taken by player (maximum is winner?)
+    * Look at status flag?
+
+# Player AI
+
+1. Random
+2. Ordered
+3. Wall hugging
+4. Avoid enemy
+5. Go to free squares
+6. Near vs. Far strategy
 
 # References
 

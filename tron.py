@@ -228,38 +228,36 @@ class Tron:
                 2: player crashed into another tail
         """
         done = False
-        status = [Status.VALID for ii in range(self.num_players)]
+        # status = [Status.VALID for ii in range(self.num_players)]
        
-        # TODO: Fix logic for ending game with n > 2 players
         # players are valid - move them first
         for player, action in zip(self.players, actions):
             if player.status == Status.VALID:
                 player.act(action)
         
+        status = [self._validate_wall(p) for p in self.players]
         # check each player against the walls/tails
         if self.num_players == 1:
-            status[0] = self._validate_wall(self.players[0])
             status[0] = self._validate_tail(self.players[0]) if status[0] == Status.VALID else status[0]
         else:
-            status = [Status(status[idx] + self._validate_wall(p)) for idx,p in enumerate(self.players)]
             # check if players have crashed into others
-            # TODO Need to check which o current p crashed into and save
             for idx, (p, o) in enumerate(permutations(self.players, r=2)):
                 if p.status == Status.VALID and status[idx//(self.num_players-1)] == Status.VALID:
+                    # TODO Need to check which o current p crashed into and save
+                    # this will simply tell us we crashed into another player, but not which one
                     status[idx//(self.num_players-1)] = self._validate_player(p, o)
         
-        # update player status
+        # update player status based on game verification
         for s,p in zip(status, self.players):
-            if s != Status.VALID:
-                p.status = s
+            p.status = s
 
+        # TODO: Fix logic for ending game with n > 2 players
         # done only when single player is remaining - when not singleplayer
         status_array = np.array(status)
         if self.num_players == 1:
-            done = True if status_array > 0 else False
+            done = True if status[0] > Status.VALID else False
         elif len(status_array[status_array == 0]) == 1 and self.num_players > 1:
             done = True
-
 
         if not done:
             self._update() # update game board
@@ -272,6 +270,7 @@ class Tron:
 
         Args:
             player (Player): player instance
+            opponent (Player): opponent to check for a head on collision
 
         Returns:
             status (int): status for the current player
