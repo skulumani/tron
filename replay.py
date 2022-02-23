@@ -35,6 +35,13 @@ class ReplayInterface():
         self.player_colors[0] = {'head': interface.COLOR_PAIRS[0][0], 'tail': interface.COLOR_PAIRS[0][1]}
         
         # get all the states extracted for the players
+        # for idx, p for enumerate(self.players):
+        #     x = [state['x'] for state in p]
+        #     y = [state['y'] for state in p]
+        #     orientation = [state['orientation'] for state in p]
+        #     status = [state['status'] for state in p]
+        #     uid = [state['uid'] for state in p]
+            
         self._reset()
 
     def _reset(self):
@@ -123,8 +130,17 @@ class ReplayInterface():
         pygame.transform.scale(self.surf, (self.WIDTH, self.HEIGHT), self.scaled_surf)
         self.scaled_surf = self._draw_grid(self.scaled_surf)
 
-        # add text
-        self.scaled_surf.blit(self.position_text.draw("Step: {}".format(self.step)), (0,0))
+        # add current status flag for every player
+        status = []
+        for p in self.players:
+            idx = self.step if self.step < len(p) else (len(p)-1)
+            status.append(tron.Status(p[idx]['status']))
+
+        string = f"Step:{self.step}  "
+        for idx, s in enumerate(status):
+            string += f"P{idx}:{s.name} "
+
+        self.scaled_surf.blit(self.position_text.draw(string), (0,0))
 
         self.window.blit(self.scaled_surf, (0, 0))
         pygame.display.update()
