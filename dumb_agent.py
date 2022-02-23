@@ -16,8 +16,8 @@ def generate_move(board, positions, orientations):
         move (int): Integer move command from tron.Turn
     """
 
-    move = get_forward_command()
-    # move = get_stochastic_command()
+    # move = get_forward_command()
+    move = get_stochastic_command()
     return move
 
 def get_forward_command():

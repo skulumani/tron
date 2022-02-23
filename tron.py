@@ -84,7 +84,7 @@ class Player:
                  2: big CW turn
         """
         (self.y, self.x, self.orientation) = Player.future_move(self.y, self.x, self.orientation,action)
-        self.states.append({'x': self.x, 'y': self.y, 'orientation': self.orientation, 'uid': self.uid, 'status': self.status})
+        self.states.append(self.state())
    
     @staticmethod
     def future_move(y, x, orientation, action):
@@ -114,6 +114,16 @@ class Player:
     def state(self):
         """Return state as tuple"""
         return {'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid, 'status': self.status}
+
+    def update_status(self, status):
+        """Update player status and last state trajectory
+
+        Args:
+            status (Status): status of player
+
+        """
+        self.status = status
+        self.states[-1]['status'] = self.status
 
 class Tron:
     """Define game board and collisions"""
@@ -153,7 +163,7 @@ class Tron:
         rows = self.grid.shape[0]
         cols = self.grid.shape[1]
         # random locations for players on top/bottom
-        x_location = np.random.randint(1+wall_gap, cols-wall_gap-1, self.num_players)
+        x_location = np.random.choice(np.arange(1+wall_gap, cols-wall_gap-1), size=self.num_players, replace=False)
         y_location = [1+wall_gap, rows-1-wall_gap]
         for idx,x in enumerate(x_location):
             y = y_location[idx % 2]
@@ -230,14 +240,18 @@ class Tron:
                 2: player crashed into another tail
         """
         done = False
-        # status = [Status.VALID for ii in range(self.num_players)]
-       
-        # players are valid - move them first
+        status = [p.status for p in self.players]
+        
+        # move the valid players
         for player, action in zip(self.players, actions):
             if player.status == Status.VALID:
                 player.act(action)
-        
-        status = [self._validate_wall(p) for p in self.players]
+      
+        # check against walls - only update if valid
+        for idx,p in enumerate(self.players):
+            if p.status == Status.VALID:
+                status[idx] = self._validate_wall(p)
+
         # check each player against the walls/tails
         if self.num_players == 1:
             status[0] = self._validate_tail(self.players[0]) if status[0] == Status.VALID else status[0]
@@ -247,11 +261,13 @@ class Tron:
                 if p.status == Status.VALID and status[idx//(self.num_players-1)] == Status.VALID:
                     # TODO Need to check which o current p crashed into and save
                     # this will simply tell us we crashed into another player, but not which one
-                    status[idx//(self.num_players-1)] = self._validate_player(p, o)
+                    if status[idx//(self.num_players-1)] is Status.VALID:
+                        status[idx//(self.num_players-1)] = self._validate_player(p, o)
         
-        # update player status based on game verification
+        # update player status and last state based on the computed status
         for s,p in zip(status, self.players):
-            p.status = s
+            if p.status is Status.VALID:
+                p.update_status(s)
 
         # TODO: Fix logic for ending game with n > 2 players
         # done only when single player is remaining - when not singleplayer
@@ -263,7 +279,7 @@ class Tron:
 
         if not done:
             self._update() # update game board
-
+        
         observation = self._get_observation()
         return observation, done, status
 
@@ -356,9 +372,12 @@ class Tron:
         Args:
             start_time (datetime): Time to append to the filename - defaults to now()
         """
-        with open("{}_tron.json".format(start_time.strftime("%Y%m%d-%H%M%S")), 'w') as file:
+        filename = "{}_tron.json".format(start_time.strftime("%Y%m%d-%H%M%S"))
+        with open(filename, 'w') as file:
             json.dump({'grid': self.grid,
                        'states': [p.states for p in self.players]}, file, indent=4, cls=utilities.NumpyEncoder) 
+
+        return filename
 
     @staticmethod
     def load(filename):

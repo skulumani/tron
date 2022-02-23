@@ -29,7 +29,7 @@ class Text():
 class UserInterface():
 
     def __init__(self, size=100, num_players=2, width=800, human=True, 
-                 record=False, fps=30):
+                 record=False, fps=3):
 
         pygame.init()
         # TODO - define colors for the total number of players in game - dark variants for head
@@ -47,8 +47,8 @@ class UserInterface():
     def _reset(self):
         """Intialize everything"""
         self.game = tron.Tron(self.size, self.num_players)
-
         self.observation = self.game.reset()
+
         self.running = True
         self.done = False
 
@@ -56,9 +56,9 @@ class UserInterface():
         if self.num_players <= 2:
             self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in range(0, self.num_players)]
         elif self.num_players <= len(COLOR_PAIRS):    
-            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(1,len(COLOR_PAIRS)), self.num_players)]
+            self.player_colors = [{'head': COLOR_PAIRS[c][0], 'tail': COLOR_PAIRS[c][1]} for c in np.random.choice(np.arange(1,len(COLOR_PAIRS)), size=self.num_players, replace=False)]
         else:
-            self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), (self.num_players, 2))]
+            self.player_colors = [{'head': COLORS[c[0]], 'tail':COLORS[c[1]]} for c in np.random.choice(list(COLORS), size=(self.num_players, 2), replace=False)]
 
         # first player is always blue
         self.player_colors[0] = {'head': COLOR_PAIRS[0][0], 'tail': COLOR_PAIRS[0][1]}
@@ -98,23 +98,23 @@ class UserInterface():
         # draw walls v
         self.image[board[:,:,0] == 1] = COLORS['black']
 
-        # draw heads
-        for p, o, color_dict in zip(positions, orientations, self.player_colors):
-            self.image[p[0],p[1],:] = color_dict['head']
-            # draw possible steps
-            # iterate through Steps[turns + current orientation]
-            for t in tron.Turn:
-                # get future square and color
-                (y, x, orientation) = tron.Player.future_move(p[0], p[1], o, t)
-                # don't draw if any point outside grid
-                if y < self.image.shape[0] and x < self.image.shape[1] and y >= 0 and x >= 0:
-                    self.image[y,x,:] = COLORS['lightyellow1']
-
         # draw tails
         for idx, color_dict in enumerate(self.player_colors):
             self.image[board[:, :, idx+1] == 1] = color_dict['tail']
-        
 
+        # draw heads
+        for p, o, color_dict in zip(positions, orientations, self.player_colors):
+            self.image[p[0],p[1],:] = color_dict['head']
+            # # draw possible steps
+            # # iterate through Steps[turns + current orientation]
+            # for t in tron.Turn:
+            #     # get future square and color
+            #     (y, x, orientation) = tron.Player.future_move(p[0], p[1], o, t)
+            #     # don't draw if any point outside grid
+            #     if y < self.image.shape[0] and x < self.image.shape[1] and y >= 0 and x >= 0:
+            #         self.image[y,x,:] = COLORS['lightyellow1']
+
+        
         # build surface
         pygame.surfarray.blit_array(self.surf, self.image.swapaxes(0, 1))
 
@@ -152,6 +152,8 @@ class UserInterface():
                 elif event.key in (pygame.K_r,):
                     # reset game
                     self._reset()
+                elif event.key in (pygame.K_s,):
+                    self.game.save()
                 elif event.key in (pygame.K_p,):
                     # print states of each player
                     print(self.game.players[0].states)
@@ -202,23 +204,23 @@ class UserInterface():
             if actions and not self.done:
                 self.update(*actions)
             # TODO Use status to determine winner - only single player with valid status
-            self.render("END" if self.done else "")
-            self.clock.tick(3)
+            self.render("".join(["P{}:{} ".format(idx,s) for idx,s in enumerate(self.status)]) if self.done else "")
+            self.clock.tick(self.FPS)
         
         self._quit()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='TRON UI')
-    parser.add_argument('--num_players', '-n', type=int, help="Number of players", default=2)
+    parser = argparse.ArgumentParser(description='TRON UI - Run single games against the AI or fully autonomously. Keyboard arrows, s to save, r to reset, esc to quit. ')
+    parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
-    parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human")
-    parser.add_argument('--record', '-r', action='store_true', help='Record the visualization')
-    parser.add_argument('--fps', '-f', type=int, default=30, help='Change visualization FPS')
+    parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human. If not set then all will be using the same agent.")
+    # parser.add_argument('--record', '-r', action='store_true', help='Record the visualization')
+    parser.add_argument('--fps', '-f', type=int, default=5, help='Change FPS.')
 
     # TODO add parsing for the AI agent to use for the AI
 
     # TODO validate number of agents = players - human players
     args = parser.parse_args()
-    ui = UserInterface(size=args.size, num_players=args.num_players, record=args.record, 
-                       human=args.interactive)
+    ui = UserInterface(size=args.size, num_players=args.players, 
+                       human=args.interactive, fps=args.fps)
     ui.run()
