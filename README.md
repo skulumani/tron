@@ -30,10 +30,10 @@ Add point goals inside map (powerups)
 * [.] unit tests for player and game grid - make sure motion works as expected
 * [-] test for visualization
 * [x] pygame human player interface
-* [ ] automated testing - save state to some file and playback/print stats
-* [ ] replay interface - read saved game data
+* [x] automated testing - save state to some file and playback/print stats
+* [x] replay interface - read saved game data
 * [ ] pygame recorder
-* [ ] ensure game end logic works in all situations
+* [x] ensure game end logic works in all situations
     * 1, 2, and n players
     * crash into heads
     * crash into tails
