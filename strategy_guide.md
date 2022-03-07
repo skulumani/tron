@@ -21,15 +21,15 @@ if __name__ == '__main__':
         tron.move(which_move(board))
 ~~~
 
-Table of Contents
+## Table of Contents
 
-    Random Selection
-    Ordered Selection
-    Wall-Hugging
-    Enemy Avoidance
-    Most Open Destination
-    Near Strategies
-    Far Strategies
+Random Selection
+Ordered Selection
+Wall-Hugging
+Enemy Avoidance
+Most Open Destination
+Near Strategies
+Far Strategies
 
 ## Random Selection
 
@@ -42,10 +42,11 @@ def which_move(board):
     return random.choice(board.moves())
 ~~~
 
-Ordered Selection
+## Ordered Selection
 
 A refinement of the random selection would be to select directions in a specific order, beginning with a most preferred direction and choosing the next direction if the preferred direction is not available.
 
+~~~
 ORDER = [tron.NORTH, tron.EAST, tron.SOUTH, tron.WEST]
 
 def which_move(board):
@@ -55,13 +56,15 @@ def which_move(board):
         if board.passable(dest):
             return dir
     return tron.NORTH
+~~~
 
-Wall-Hugging
+## Wall-Hugging
 
 Wall hugging is a simple strategy which attempts to move onto a square adjacent to a wall, thus "hugging" the wall by following it around.
 
 It is very space-efficient and will perform well in a survival situation.
 
+~~~
 import random
 
 # preference order of directions
@@ -90,12 +93,14 @@ def which_move(board):
             break
 
     return decision
+~~~
 
-Enemy Avoidance
+## Enemy Avoidance
 
 Run away! In the game of Tron, if you can't confront the enemy, it's probably best to keep away. In the most simple form, this means not moving to a square which the enemy could also move onto. You can also generalize this to a strategy which simply chooses the destination farthest from the opponent.
 Simple form:
 
+~~~
 ORDER = [tron.NORTH, tron.EAST, tron.SOUTH, tron.WEST]
 
 def which_move(board):
@@ -116,9 +121,11 @@ def which_move(board):
         return candidates[0]
     # give up
     return tron.NORTH
+~~~
 
 More advanced form:
 
+~~~
 import random
 
 def which_move(board):
@@ -131,11 +138,13 @@ def which_move(board):
             bestdist = dist
             bestmove = dir
     return bestmove
+~~~
 
-Most Open Destination
+## Most Open Destination
 
 Choice is a good thing in Tron, because it means less chance of being boxed in and trapped. So, a simple but effective strategy is simply to choose the destination square with the most open neighbours. In the case of a tie (which can happen often with a large, empty board), choose any of the above strategies as a fallback.
 
+~~~
 def which_move(board):
     bestcount = -1
     bestmove = tron.NORTH
@@ -149,8 +158,9 @@ def which_move(board):
             bestcount = count
             bestmove = dir
     return bestmove
+~~~
 
-Near Strategies
+## Near Strategies
 
 When your bot is close to the opponent (say, less than 5 squares away), your objective should be to attack the opponent and try to force him into a corner or reduce his room to move.
 
