@@ -44,6 +44,7 @@ Add point goals inside map (powerups)
 * [ ] Automated way to decide on who's the winner after game is done
     * Look at number of states/steps taken by player (maximum is winner?)
     * Look at status flag?
+* [ ] Track Elo ratings of each agent and the player
 
 # Player AI
 
