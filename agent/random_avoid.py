@@ -1,7 +1,7 @@
 import numpy as np
 import tron
 
-def generate_move(board, positions, orientation):
+def generate_move(board, positions, orientations):
     """
 
     Args:
@@ -15,17 +15,22 @@ def generate_move(board, positions, orientation):
     Returns:
         move (int): Integer move command from tron.Turn
     """
-    pass
-
-def get_valid_moves(board, positions, orientation):
+    # assume that current player is always player 0
+    y, x = positions[0]
+    orientation = orientations[0]
     # get list of possible moves
+    valid_moves = []
     for a in tron.Turn:
         (yn, xn, _) = tron.Player.future_move(y, x, orientation, a)
 
         # check if resulting square is occupied
-
-        # check all moves for future collisions
+        if tron.Tron.validate_position(yn, xn, board):
+            valid_moves.append(a)
 
     # randomly pick a move from valid options - or if none pick a random invalid one
+    if valid_moves:
+        move = np.random.choice(valid_moves)
+    else:
+        move = np.random.choice(tron.Turn)
 
-    pass
+    return tron.Turn(move)
