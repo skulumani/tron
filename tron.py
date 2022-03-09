@@ -370,7 +370,11 @@ class Tron:
     def validate_position(yn, xn, board):
         """Check if potential position is occupied or not
         """
-        return False if np.sum(board[yn, xn, :]) > 0 else True
+        rows, cols = board.shape[0], board.shape[1]
+        if yn >= rows or xn >= cols or yn <= 0 or xn <= 0:
+            return False
+        else:
+            return False if np.sum(board[yn, xn, :]) > 0 else True
 
     def save(self, start_time=datetime.now()):
         """Save the game history to file

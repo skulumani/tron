@@ -82,7 +82,9 @@ class ReplayInterface():
 
             # make sure we don't go over max number of states
             max_step = self.step if self.step <= len(x) else len(x)
+            head_idx = 0 if max_step == 0 else max_step-1
             self.image[y[0:max_step], x[0:max_step], :] = color_dict['tail']
+            self.image[y[head_idx], x[head_idx], :] = color_dict['head']
 
         # build surface
         pygame.surfarray.blit_array(self.surf, self.image.swapaxes(0, 1))

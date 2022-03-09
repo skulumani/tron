@@ -3,7 +3,7 @@
 import numpy as np
 import tron
 
-def generate_move(board, positions, orientations):
+def generate_move(board, positions, orientations, uid):
     """
 
     Args:
@@ -13,13 +13,16 @@ def generate_move(board, positions, orientations):
         positions (list): list of current position of self and opponents as tuple (y, x)
         orientations (list): list of self orientation and opponents
             from tron.Orientation
+        uid (int): player uid to use to index into arrays
     
     Returns:
         move (int): Integer move command from tron.Turn
     """
-    # assume that current player is always player 0
-    y, x = positions[0]
-    orientation = orientations[0]
+    # TODO assume that current player is always player 0
+    # TODO consider passing a player.uid as an observation to the agent. 
+    # That way agent knows which of the n players it is controlling
+    y, x = positions[uid]
+    orientation = orientations[uid]
     # get list of possible moves
     valid_moves = []
     for a in tron.Turn:

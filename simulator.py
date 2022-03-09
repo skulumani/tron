@@ -34,10 +34,10 @@ def run_simulation(players, size, agents):
     done = False
     while not done:
         # generate all the actions
-        import ipdb;ipdb.set_trace()
         actions = [am.generate_move(observation['board'],
                                     observation['positions'],
-                                    observation['orientations']) for am in agent_modules]
+                                    observation['orientations'],
+                                    uid) for uid, am in enumerate(agent_modules)]
         observation, done, status = game.move(*actions)
 
     
