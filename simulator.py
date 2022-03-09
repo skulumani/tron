@@ -25,9 +25,8 @@ def run_simulation(players, size, agents):
         return 1
     
     print("Competitors: {}".format(agent_list))
-    
-    module_names = [os.path.splitext(a)[0] for a in agent_list]
-    agent_modules = [importlib.import_module(a) for a in module_names]
+    # module_names = [os.path.splitext(a)[0] for a in agent_list]
+    agent_modules = [importlib.import_module(a) for a in agent_list]
 
     # instantiate the game
     game = tron.Tron(size=size, num_players=players)
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TRON - AI battle using provided agents")
     parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
-    parser.add_argument('agents', nargs='*', default='agent/dumb.py', help="module filename of agents to battle")
+    parser.add_argument('agents', nargs='*', default='agent.dumb', help="module to use, e.g. agent.dumb")
     args = parser.parse_args()
     
     run_simulation(players=args.players,

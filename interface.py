@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 
 import tron
-import dumb_agent
+from agent import dumb
 
 COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 COLOR_PAIRS =  [(COLORS['blue4'], COLORS['blue1']),
@@ -164,11 +164,11 @@ class UserInterface():
         if self.human is True and action is not None:
             actions.append(action)
             for idx in range(1, self.num_players):
-                actions.append(dumb_agent.generate_move(self.observation['board'],
+                actions.append(dumb.generate_move(self.observation['board'],
                                                         self.observation['positions'],
                                                         self.observation['orientations']))
         elif self.human is False: # all AI players
-            actions = [dumb_agent.generate_move(self.observation['board'],
+            actions = [dumb.generate_move(self.observation['board'],
                                                 self.observation['positions'],
                                                 self.observation['orientations']) for ii in range(self.num_players)]
         return actions
