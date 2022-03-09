@@ -99,12 +99,11 @@ class ReplayInterface():
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     self.running = False
                     break
-                if event.key in (pygame.K_RIGHT,):
-                    self.step += 1
-                if event.key in (pygame.K_LEFT,):
-                    self.step -= 1
-                if event.key in (pygame.K_r,):
+                elif event.key in (pygame.K_r,):
                     self._reset()
+
+        keys = pygame.key.get_pressed()
+        self.step += keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
 
     def update(self):
         pass

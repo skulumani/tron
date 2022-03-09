@@ -1,3 +1,5 @@
+"""Randomly pick only valid moves"""
+
 import numpy as np
 import tron
 
