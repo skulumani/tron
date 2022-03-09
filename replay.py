@@ -8,7 +8,7 @@ import interface
 
 class ReplayInterface():
     
-    def __init__(self, width=800, fps=3):
+    def __init__(self, width=800, fps=15):
         pygame.init()
 
         self.WIDTH=width
@@ -99,11 +99,15 @@ class ReplayInterface():
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     self.running = False
                     break
+                elif event.key in (pygame.K_RIGHT,):
+                    self.step += 1
+                elif event.key in (pygame.K_LEFT,):
+                    self.step -= 1
                 elif event.key in (pygame.K_r,):
                     self._reset()
 
         keys = pygame.key.get_pressed()
-        self.step += keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        self.step += keys[pygame.K_l] - keys[pygame.K_h]
 
     def update(self):
         pass

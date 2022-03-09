@@ -24,7 +24,6 @@ def run_simulation(players, size, agents):
         return 1
     
     print("Competitors: {}".format(agent_list))
-    import ipdb;ipdb.set_trace()
     # module_names = [os.path.splitext(a)[0] for a in agent_list]
     agent_modules = [importlib.import_module(a) for a in agent_list]
 
@@ -35,6 +34,7 @@ def run_simulation(players, size, agents):
     done = False
     while not done:
         # generate all the actions
+        import ipdb;ipdb.set_trace()
         actions = [am.generate_move(observation['board'],
                                     observation['positions'],
                                     observation['orientations']) for am in agent_modules]
