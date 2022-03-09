@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TRON - AI battle using provided agents")
     parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
-    parser.add_argument('agents', nargs='*', default='dumb_agent.py', help="module filename of agents to battle")
+    parser.add_argument('agents', nargs='*', default='agent/dumb.py', help="module filename of agents to battle")
     args = parser.parse_args()
     
     run_simulation(players=args.players,
