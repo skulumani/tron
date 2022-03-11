@@ -3,9 +3,14 @@ import enum
 from itertools import combinations, permutations
 from datetime import datetime
 import json
+from typing import Any
 
 import utilities
 
+# type aliases
+Location = tuple[int, int] # location type (y, x)
+PlayerState = dict[str, Any]
+Observation = dict[str, Any]
 
 class Status(enum.IntEnum):
     VALID = 0
@@ -70,7 +75,16 @@ class Player:
         self.status = status
         
         # save state history
-        self.states = [{'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid, 'status':self.status}]
+        # state at each time step - location/postion, orientaiton, uid, status, action 
+        self.states: Optional[dict[str, any]] = {'y': [self.y,],
+                                                 'x': [self.x,],
+                                                 'orientation': [self.orientation,],
+                                                 'uid': self.uid,
+                                                 'status': [self.status,],
+                                                 'actions': [],
+                                                 'rewards': [],
+                                                 'location': [(self.y, self.x),]}
+
 
     def act(self, action):
         """Rotate and move 1 unit forward
@@ -83,11 +97,19 @@ class Player:
                  1: small CW turn
                  2: big CW turn
         """
-        (self.y, self.x, self.orientation) = Player.future_move(self.y, self.x, self.orientation,action)
-        self.states.append(self.state())
-   
+        (y_new, x_new, orientation_new) = Player.future_move(self.y, self.x, self.orientation,action)
+        self.y = y_new
+        self.x = x_new
+        self.orientation = orientation_new
+
+        self.states['y'].append(self.y)
+        self.states['x'].append(self.x)
+        self.states['orientation'].append(self.orientation)
+        self.states['actions'].append(action)
+
     @staticmethod
-    def future_move(y, x, orientation, action):
+    def future_move(y, x, orientation, action) -> tuple[int, int, Orientation] :
+        """Return the future position after performing a given action"""
         orientation = Orientation((orientation + action) % len(Orientation))
         dy, dx = Player.STEPS[orientation]
         
@@ -111,24 +133,25 @@ class Player:
         else:
             return Status.VALID
 
-    def state(self):
-        """Return state as tuple"""
-        return {'y': self.y, 'x': self.x, 'orientation': self.orientation, 'uid': self.uid, 'status': self.status}
-
-    def update_status(self, status):
+    def update_status(self, status: Status, reward: float):
         """Update player status and last state trajectory
 
         Args:
             status (Status): status of player
 
         """
+
         self.status = status
-        self.states[-1]['status'] = self.status
+        self.states['status'].append(self.status)
+        self.states['rewards'].append(reward)
+
+        self.states[-1]['status'] = self.status # TODO check if this is necessary
+
 
 class Tron:
     """Define game board and collisions"""
 
-    def __init__(self, size=10, num_players=2):
+    def __init__(self, size: int = 10, num_players: int = 2):
         """Default constructor
 
         Args:
@@ -140,7 +163,7 @@ class Tron:
         self.halfsize = size // 2
         self.num_players = num_players
 
-    def reset(self):
+    def reset(self) -> Observation:
         """Initialize game field and randomly place players
 
         Returns:
@@ -204,7 +227,7 @@ class Tron:
         for idx, player in enumerate(self.players):
             self.grid[player.y, player.x, player.uid] = 1
 
-    def _get_observation(self):
+    def _get_observation(self) -> Observation:
         """Return representation of game
 
         Returns:
@@ -220,6 +243,7 @@ class Tron:
             'board': self.grid.copy(),
             'positions': tuple([(p.y, p.x) for p in self.players]),
             'orientations': tuple([p.orientation for p in self.players])}
+        # TODO add rewards here
         return observation
 
     def move(self, *actions):
