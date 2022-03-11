@@ -67,7 +67,7 @@ class TestTron():
 
     def test_reset_players(self):
         for num_players in range(1,10):
-            game = tron.Tron(size=10, num_players=num_players)
+            game = tron.Tron(size=100, num_players=num_players)
             observation = game.reset()
             assert len(observation['positions']) == num_players
             assert observation['board'].shape[2] == num_players+1

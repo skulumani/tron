@@ -44,10 +44,12 @@ Add point goals inside map (powerups)
 * [ ] Automated way to decide on who's the winner after game is done
     * Look at number of states/steps taken by player (maximum is winner?)
     * Look at status flag?
+* [ ] Track Elo ratings of each agent and the player
 
 # Player AI
 
-1. Random
+1. [x] Random avoid - pick a random valid move. will never lose unless fully enclosed
+7. Semi deterministic - pick only valid moves. Always pick last move unless obstacle - then pick random move. Will only change action when facing an obstacle
 2. Ordered
 3. Wall hugging
 4. Avoid enemy

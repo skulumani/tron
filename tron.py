@@ -386,9 +386,19 @@ class Tron:
                 2: crash into player2
         """
         if player1.front_crash(player2):
-            Status.CRASH_INTO_OPPONENT
+            return Status.CRASH_INTO_OPPONENT
         else:
-            Status.VALID
+            return Status.VALID
+
+    @staticmethod
+    def validate_position(yn, xn, board):
+        """Check if potential position is occupied or not
+        """
+        rows, cols = board.shape[0], board.shape[1]
+        if yn >= rows or xn >= cols or yn <= 0 or xn <= 0:
+            return False
+        else:
+            return False if np.sum(board[yn, xn, :]) > 0 else True
 
     def save(self, start_time=datetime.now()):
         """Save the game history to file
