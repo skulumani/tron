@@ -145,7 +145,7 @@ class Player:
         self.states['status'].append(self.status)
         self.states['rewards'].append(reward)
 
-        self.states[-1]['status'] = self.status # TODO check if this is necessary
+        self.states['status'][-1] = self.status # TODO check if this is necessary
 
 
 class Tron:
@@ -290,8 +290,9 @@ class Tron:
         
         # update player status and last state based on the computed status
         for s,p in zip(status, self.players):
+            # TODO Compute reward for each player
             if p.status is Status.VALID:
-                p.update_status(s)
+                p.update_status(s, 1)
 
         # TODO: Fix logic for ending game with n > 2 players
         # done only when single player is remaining - when not singleplayer
