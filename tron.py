@@ -179,7 +179,7 @@ class Tron:
         observation = self._get_observation()
         return observation
    
-    def _init_players(self):
+    def _init_players(self) -> list[Player]:
         players = []
         
         wall_gap = self.size // 10
@@ -196,14 +196,14 @@ class Tron:
 
         return players
 
-    def _init_two_players(self):
+    def _init_two_players(self) -> list[Player]:
         players = []
         players.append(Player(5, 5, Orientation.E))
         players.append(Player(75,75, Orientation.W))
         self.num_players = 2
         return players
 
-    def _define_grid(self):
+    def _define_grid(self) -> np.ndarray :
         """Define game board
         
         Returns:
@@ -213,6 +213,7 @@ class Tron:
         # positive x - move to larger/higher columns (right)
         # positive y - move to higher/larger rows (down)
         grid = np.zeros([self.size, self.size, 1+self.num_players]) # third axis for player state 
+
         # draw boundary walls
         grid[0,:,0] = 1
         grid[-1,:,0] = 1
@@ -221,8 +222,11 @@ class Tron:
 
         return grid
 
-    def _update(self):
-        """Define player positions in the grid"""
+    def _update(self) -> None:
+        """Define player positions in the grid
+
+        Update game board with the current player positions
+        """
         # TODO: only move players in valid state
         for idx, player in enumerate(self.players):
             self.grid[player.y, player.x, player.uid] = 1
@@ -245,7 +249,8 @@ class Tron:
             'orientations': tuple([p.orientation for p in self.players])}
         # TODO add rewards here
         return observation
-
+    
+    # TODO Add other game representations
     def move(self, *actions):
         """Move all the players
 
