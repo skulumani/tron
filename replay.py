@@ -76,9 +76,10 @@ class ReplayInterface():
 
         # draw the players up through current step
         for idx, color_dict in enumerate(self.player_colors):
-            x = [state['x'] for state in self.players[idx]]
-            y = [state['y'] for state in self.players[idx]]
-            status = [state['status'] for state in self.players[idx]]
+            x = self.players[idx]['x']
+            y = self.players[idx]['y']
+            status = self.players[idx]['status']
+            rewards = self.players[idx]['rewards']
 
             # make sure we don't go over max number of states
             max_step = self.step if self.step <= len(x) else len(x)
@@ -139,7 +140,7 @@ class ReplayInterface():
         status = []
         for p in self.players:
             idx = self.step if self.step < len(p) else (len(p)-1)
-            status.append(tron.Status(p[idx]['status']))
+            status.append(tron.Status(p['status'][idx]))
 
         string = f"Step:{self.step}  "
         for idx, s in enumerate(status):

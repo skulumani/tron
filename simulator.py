@@ -38,7 +38,7 @@ def run_simulation(players, size, agents):
                                     observation['positions'],
                                     observation['orientations'],
                                     uid) for uid, am in enumerate(agent_modules)]
-        observation, done, status = game.move(*actions)
+        observation, done, status, reward = game.move(*actions)
 
     
     # determine the winner and print
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TRON - AI battle using provided agents")
     parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
-    parser.add_argument('agents', nargs='*', default='agent.dumb', help="module to use, e.g. agent.dumb")
+    parser.add_argument('agents', nargs='*', default=['agent.dumb',], help="module to use, e.g. agent.dumb")
     args = parser.parse_args()
     
     run_simulation(players=args.players,
