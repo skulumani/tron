@@ -361,7 +361,7 @@ class Tron:
         elif status in (Status.CRASH_INTO_OPPONENT, Status.CRASH_INTO_SELF, Status.CRASH_INTO_TAIL, Status.CRASH_INTO_WALL):
             return -100
 
-    def _validate_player(self, player, opponent):
+    def _validate_player(self, player: Player, opponent: Player) -> Status:
         """Check if player is in valid state
 
         Args:
@@ -387,7 +387,7 @@ class Tron:
 
         return status
 
-    def _validate_wall(self, player):
+    def _validate_wall(self, player: Player) -> Status:
         """Check if player crashes into a wall boundary
 
         Args:
@@ -409,7 +409,7 @@ class Tron:
         else:
             return Status.VALID
 
-    def _validate_tail(self, player):
+    def _validate_tail(self, player: Player) -> Status:
         """Check if player crashed into a tail
 
         Args:
@@ -429,7 +429,7 @@ class Tron:
         else:
             return Status.VALID
 
-    def _validate_front_crash(self, player1, player2):
+    def _validate_front_crash(self, player1: Player, player2: Player) -> Status:
         """Check if two players heads have collided
 
         Args:
@@ -447,7 +447,7 @@ class Tron:
             return Status.VALID
 
     @staticmethod
-    def validate_position(yn, xn, board):
+    def validate_position(yn: int, xn: int, board: np.ndarray) -> bool:
         """Check if potential position is occupied or not"""
         rows, cols = board.shape[0], board.shape[1]
         if yn >= rows or xn >= cols or yn <= 0 or xn <= 0:
@@ -455,12 +455,13 @@ class Tron:
         else:
             return False if np.sum(board[yn, xn, :]) > 0 else True
 
-    def save(self, start_time=datetime.now()):
+    def save(self, start_time: datetime = datetime.now()) -> str:
         """Save the game history to file
 
         Args:
             start_time (datetime): Time to append to the filename - defaults to now()
         """
+        # TODO ensure saving and loading are working - write a unit test
         filename = "{}_tron.json".format(start_time.strftime("%Y%m%d-%H%M%S"))
         with open(filename, "w") as file:
             json.dump(
@@ -473,7 +474,7 @@ class Tron:
         return filename
 
     @staticmethod
-    def load(filename):
+    def load(filename: str) -> tuple[np.ndarray, list]:
         """Load a game
 
         Args:

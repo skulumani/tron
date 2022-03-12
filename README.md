@@ -26,7 +26,10 @@ Add point goals inside map (powerups)
 
 # TODO 
 * [ ] define a state description
+    * entire game board at a time
+    * vision grid
 * [ ] track actions and rewards at each step
+    * validate that actions and rewards are being tracked properly
 * [ ] record number of visits to each state/action state pair
 * [ ] implement monte carlo first visit approach
 
