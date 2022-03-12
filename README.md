@@ -25,6 +25,10 @@ Add point goals inside map (powerups)
 3. AI vs. n x optimal controller
 
 # TODO 
+* [ ] define a state description
+* [ ] track actions and rewards at each step
+* [ ] record number of visits to each state/action state pair
+* [ ] implement monte carlo first visit approach
 
 * [x] no more 45 degree moves
 * [.] unit tests for player and game grid - make sure motion works as expected
@@ -45,6 +49,7 @@ Add point goals inside map (powerups)
     * Look at number of states/steps taken by player (maximum is winner?)
     * Look at status flag?
 * [ ] Track Elo ratings of each agent and the player
+
 
 # Player AI
 

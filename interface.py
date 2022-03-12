@@ -168,7 +168,7 @@ class UserInterface():
         # TODO - generalize to allow user functional input for agent
         if self.human is True and action is not None:
             actions.append(action)
-            for idx in range(1, self.num_players):
+            for uid in range(1, self.num_players):
                 actions.append(self.agent_modules.generate_move(self.observation['board'],
                                                                 self.observation['positions'],
                                                                 self.observation['orientations'],
@@ -177,13 +177,14 @@ class UserInterface():
             actions = [self.agent_modules.generate_move(self.observation['board'],
                                                         self.observation['positions'],
                                                         self.observation['orientations'],
-                                                        ii) for ii in range(self.num_players)]
+                                                        uid) for uid in range(self.num_players)]
         return actions
 
 
     def update(self, *action):
         # change game state
-        self.observation, self.done, self.status = self.game.move(*action)
+        # TODO Figure out what to do about reward
+        self.observation, self.done, self.status, reward = self.game.move(*action)
 
     def render(self, string):
         # draw surface
