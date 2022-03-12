@@ -226,7 +226,7 @@ if __name__ == "__main__":
     parser.add_argument('--fps', '-f', type=int, default=5, help='Change FPS.')
     
     # TODO add parsing for the AI agent to use for the AI
-    parser.add_argument('agents', nargs='*', default='agent.dumb', help="module to use, e.g. agent.dumb")
+    parser.add_argument('agents', nargs='*', default=['agent.dumb',], help="module to use, e.g. agent.dumb")
 
     # TODO validate number of agents = players - human players
     args = parser.parse_args()
