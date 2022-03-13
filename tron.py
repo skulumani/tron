@@ -1,6 +1,6 @@
 import numpy as np
 import enum 
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 from datetime import datetime
 import json
 
@@ -365,6 +365,32 @@ class Tron:
             Status.CRASH_INTO_OPPONENT
         else:
             Status.VALID
+
+    def get_vision_grid(self, uid: int = 1, size: int = 3):
+        """Return vision grid for current game state
+
+        """
+        # get current player position
+        (y, x) = (self.players[uid-1].y, self.players[uid-1].x)
+        rows = np.arange(y-size//2, y+size//2)
+        cols = np.arange(x-size//2, x+size//2)
+        
+        # obstacle grid centered around current position
+        obstacle_grid = np.zeros((size, size))
+        player_grid = np.zeros((size, size))
+        
+        # TODO handle multiple opponents
+        opponent_grid = np.zeros((size, size)) 
+
+        for idx, r, c in enumerate(product(rows, cols)):
+            # only extract values that lie within the grid (non negative or > grid_size)
+            if r < 0 or c < 0 or r >= self.grid_size or c >= self.grid_size:
+                continue
+            obstacle_grids[idx] = self.grid[r, c, :]
+            player_grid[idx] = self.grid[r, c, uid]
+            opponent_grid[idx] = self.grid[r, c, uid+1]
+
+        return obstacle_grid.flatten()
 
     def save(self, start_time=datetime.now()):
         """Save the game history to file
