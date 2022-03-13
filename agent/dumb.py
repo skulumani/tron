@@ -1,7 +1,7 @@
 import numpy as np
 import tron
 
-def generate_move(board, positions, orientations):
+def generate_move(board, positions, orientations, uid):
     """Generate move for game
 
     Args:
@@ -11,6 +11,7 @@ def generate_move(board, positions, orientations):
         positions (list): list of current position of self and opponents as tuple (y, x)
         orientations (list): list of self orientation and opponents
             from tron.Orientation
+        uid (int): player uid - index into arrays
     
     Returns:
         move (int): Integer move command from tron.Turn

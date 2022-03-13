@@ -25,6 +25,13 @@ Add point goals inside map (powerups)
 3. AI vs. n x optimal controller
 
 # TODO 
+* [ ] define a state description
+    * entire game board at a time
+    * vision grid
+* [ ] track actions and rewards at each step
+    * validate that actions and rewards are being tracked properly
+* [ ] record number of visits to each state/action state pair
+* [ ] implement monte carlo first visit approach
 
 * [x] no more 45 degree moves
 * [.] unit tests for player and game grid - make sure motion works as expected
@@ -46,9 +53,11 @@ Add point goals inside map (powerups)
     * Look at status flag?
 * [ ] Track Elo ratings of each agent and the player
 
+
 # Player AI
 
-1. Random
+1. [x] Random avoid - pick a random valid move. will never lose unless fully enclosed
+7. Semi deterministic - pick only valid moves. Always pick last move unless obstacle - then pick random move. Will only change action when facing an obstacle
 2. Ordered
 3. Wall hugging
 4. Avoid enemy

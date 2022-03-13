@@ -2,9 +2,10 @@ import numpy as np
 import pygame
 import argparse
 from datetime import datetime
+import importlib
 
 import tron
-import dumb_agent
+from agent import dumb
 
 COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 COLOR_PAIRS =  [(COLORS['blue4'], COLORS['blue1']),
@@ -29,7 +30,7 @@ class Text():
 class UserInterface():
 
     def __init__(self, size=100, num_players=2, width=800, human=True, 
-                 record=False, fps=3):
+                 record=False, fps=15, agents=['agents.dumb']):
 
         pygame.init()
         # TODO - define colors for the total number of players in game - dark variants for head
@@ -39,6 +40,10 @@ class UserInterface():
         self.human = human # player 1 actions are human keyboard control
         self.FPS = fps
         self.RECORD = record
+        self.agents = agents[0] # only use the first agent provided
+
+        # import agents
+        self.agent_modules = importlib.import_module(self.agents)
 
         # intialize game
         self._reset()
@@ -163,20 +168,23 @@ class UserInterface():
         # TODO - generalize to allow user functional input for agent
         if self.human is True and action is not None:
             actions.append(action)
-            for idx in range(1, self.num_players):
-                actions.append(dumb_agent.generate_move(self.observation['board'],
-                                                        self.observation['positions'],
-                                                        self.observation['orientations']))
+            for uid in range(1, self.num_players):
+                actions.append(self.agent_modules.generate_move(self.observation['board'],
+                                                                self.observation['positions'],
+                                                                self.observation['orientations'],
+                                                                uid))
         elif self.human is False: # all AI players
-            actions = [dumb_agent.generate_move(self.observation['board'],
-                                                self.observation['positions'],
-                                                self.observation['orientations']) for ii in range(self.num_players)]
+            actions = [self.agent_modules.generate_move(self.observation['board'],
+                                                        self.observation['positions'],
+                                                        self.observation['orientations'],
+                                                        uid) for uid in range(self.num_players)]
         return actions
 
 
     def update(self, *action):
         # change game state
-        self.observation, self.done, self.status = self.game.move(*action)
+        # TODO Figure out what to do about reward
+        self.observation, self.done, self.status, reward = self.game.move(*action)
 
     def render(self, string):
         # draw surface
@@ -216,11 +224,13 @@ if __name__ == "__main__":
     parser.add_argument('--interactive', '-i', action='store_true', help="Player 1 is human. If not set then all will be using the same agent.")
     # parser.add_argument('--record', '-r', action='store_true', help='Record the visualization')
     parser.add_argument('--fps', '-f', type=int, default=5, help='Change FPS.')
-
+    
     # TODO add parsing for the AI agent to use for the AI
+    parser.add_argument('agents', nargs='*', default=['agent.dumb',], help="module to use, e.g. agent.dumb")
 
     # TODO validate number of agents = players - human players
     args = parser.parse_args()
     ui = UserInterface(size=args.size, num_players=args.players, 
-                       human=args.interactive, fps=args.fps)
+                       human=args.interactive, fps=args.fps,
+                       agents=args.agents)
     ui.run()

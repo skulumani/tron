@@ -8,7 +8,7 @@ import interface
 
 class ReplayInterface():
     
-    def __init__(self, width=800, fps=3):
+    def __init__(self, width=800, fps=15):
         pygame.init()
 
         self.WIDTH=width
@@ -76,13 +76,16 @@ class ReplayInterface():
 
         # draw the players up through current step
         for idx, color_dict in enumerate(self.player_colors):
-            x = [state['x'] for state in self.players[idx]]
-            y = [state['y'] for state in self.players[idx]]
-            status = [state['status'] for state in self.players[idx]]
+            x = self.players[idx]['x']
+            y = self.players[idx]['y']
+            status = self.players[idx]['status']
+            rewards = self.players[idx]['rewards']
 
             # make sure we don't go over max number of states
             max_step = self.step if self.step <= len(x) else len(x)
+            head_idx = 0 if max_step == 0 else max_step-1
             self.image[y[0:max_step], x[0:max_step], :] = color_dict['tail']
+            self.image[y[head_idx], x[head_idx], :] = color_dict['head']
 
         # build surface
         pygame.surfarray.blit_array(self.surf, self.image.swapaxes(0, 1))
@@ -99,12 +102,15 @@ class ReplayInterface():
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     self.running = False
                     break
-                if event.key in (pygame.K_RIGHT,):
+                elif event.key in (pygame.K_RIGHT,):
                     self.step += 1
-                if event.key in (pygame.K_LEFT,):
+                elif event.key in (pygame.K_LEFT,):
                     self.step -= 1
-                if event.key in (pygame.K_r,):
+                elif event.key in (pygame.K_r,):
                     self._reset()
+
+        keys = pygame.key.get_pressed()
+        self.step += keys[pygame.K_l] - keys[pygame.K_h]
 
     def update(self):
         pass
@@ -134,7 +140,7 @@ class ReplayInterface():
         status = []
         for p in self.players:
             idx = self.step if self.step < len(p) else (len(p)-1)
-            status.append(tron.Status(p[idx]['status']))
+            status.append(tron.Status(p['status'][idx]))
 
         string = f"Step:{self.step}  "
         for idx, s in enumerate(status):

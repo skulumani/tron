@@ -67,7 +67,7 @@ class TestTron():
 
     def test_reset_players(self):
         for num_players in range(1,10):
-            game = tron.Tron(size=10, num_players=num_players)
+            game = tron.Tron(size=100, num_players=num_players)
             observation = game.reset()
             assert len(observation['positions']) == num_players
             assert observation['board'].shape[2] == num_players+1
@@ -100,11 +100,12 @@ class TestTron():
         game.reset()
         
         # move forward
-        obs, done, status = game.move(tron.Turn.STRAIGHT)
+        obs, done, status, reward = game.move(tron.Turn.STRAIGHT)
 
         assert np.sum(obs['board'][:,:,1]) == 2
         assert done is False
         assert status[0] is tron.Status.VALID
+        assert reward[0] is 1
 
     def test_validate_wall_valid(self):
         game = tron.Tron(size=100, num_players=1)
@@ -155,7 +156,8 @@ class TestTron():
         actions = [tron.Turn.STRAIGHT for i in range(game.num_players)]
         # MUST move players to avoid checking themselves
         obs = game.reset()
-        obs, done, status = game.move(*actions)
+        obs, done, status, reward = game.move(*actions)
+        
         # ranomly assigning player locations to motion might cause collisions
         # large grid tries to reduce this probablity
         assert sum(status) == 0
