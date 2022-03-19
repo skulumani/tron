@@ -12,8 +12,6 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
 
-# # Your codes .... 
-# json.dumps(data, cls=NpEncoder
 
 def state_space(grid_size=13, num_players=2):
     """compute state space of tron game"""
