@@ -15,4 +15,5 @@ dependencies:
     # - -r requirements.txt
     - pygame
     - ipdb
+    - pandas
 
