@@ -195,8 +195,30 @@ class Tron:
 
         self._update()
         observation = self._get_observation()
+
+        self._initialize_game_state()
+
         return observation
 
+    def get_game_state(self) -> Dict[str, Any]:
+        """Dictionary to hold entire game state for use by RL"""
+        # get player data
+        actions = [p.states["actions"] for p in self.players]
+        rewards = [p.states["rewards"] for p in self.players]
+        status = [p.states["status"] for p in self.players]
+        uid = [p.states["uid"] for p in self.players]
+
+        game_state = {"grid_size": self.size,
+                      "num_players": self.num_players,
+                      "board": self.grid,
+                      "uid": [],
+                      "actions": [],
+                      "rewards": [],
+                      "status": [],
+                      "states": []}
+
+        return game_state
+    
     def _init_players(self) -> list[Player]:
         players = []
 
