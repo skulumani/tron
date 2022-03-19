@@ -1,7 +1,11 @@
 import numpy as np
-import tron
 
-def generate_move(board, positions, orientations):
+import tron
+from agent.util import get_valid_moves, validate_move
+
+"""Go straight unless there's an obstacle"""
+
+def generate_move(board, positions, orientations, uid):
     """Generate move for game
 
     Args:
@@ -15,10 +19,24 @@ def generate_move(board, positions, orientations):
     Returns:
         move (int): Integer move command from tron.Turn
     """
+    # current player state
+    y, x = positions[uid]
+    orientation = orientations[uid]
     
-    # check all moves and determine if they result in collision
+    # try to go straight
+    if validate_move(y, x, orientation, board, action=tron.Turn.STRAIGHT):
+        move = tron.Turn.STRAIGHT
+    else:
+        # check all moves and determine if they result in collision
+        valid_moves = get_valid_moves(y, x, orientation, board)
 
-    # pick a random move that doesn't cause a collision
-    pass
+        if valid_moves:
+            move = np.random.choice(valid_moves)
+        else:
+            move = np.random.choice(tron.Turn)
+            
+        # try to move straight
+
+    return move
 
 

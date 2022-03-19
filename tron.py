@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 import numpy as np
 import enum 
 from itertools import combinations, permutations, product
-=======
-"""Tron game"""
-
-import enum
-from itertools import permutations
->>>>>>> 1078f662dd609bd22208ba61cecead19b0882549
 from datetime import datetime
 import json
 from typing import Any, Optional

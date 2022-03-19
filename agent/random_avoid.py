@@ -38,4 +38,4 @@ def generate_move(board, positions, orientations, uid):
     else:
         move = np.random.choice(tron.Turn)
 
-    return tron.Turn(move)
+    return move
