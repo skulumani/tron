@@ -5,25 +5,15 @@ import sys
 import argparse
 
 import tron
+from agent.util import build_agent_list
 
 def run_simulation(players, size, agents):
     
     print("TRON battle of {} players on {} grid".format(players, size))
     # build agent list
-    if len(agents) < players:
-        print("Insufficient agents provided. Will duplicate last agent")
-        agent_list = agents
-        for ii in range(len(agents), players):
-            agent_list.append(agents[-1])
-    elif len(agents) == 1:
-        agent_list = [agents[0] for ii in range(players)]
-    elif len(agents) >= players:
-        agent_list = [agents[ii] for ii in range(players)]
-    else:
-        print("Something strange with agent list")
-        return 1
-    
+    agent_list = build_agent_list(players, agents)
     print("Competitors: {}".format(agent_list))
+
     # module_names = [os.path.splitext(a)[0] for a in agent_list]
     agent_modules = [importlib.import_module(a) for a in agent_list]
 
