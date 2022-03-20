@@ -143,7 +143,6 @@ class Player:
         Returns:
             crash (bool): Logical crash if heads collide
         """
-
         crash = self.x == opponent.x and self.y == opponent.y
         if crash:
             return Status.CRASH_INTO_OPPONENT
@@ -351,8 +350,13 @@ class Tron:
         # done only when single player is remaining - when not singleplayer
         status_array = np.array(status)
         if self.num_players == 1:
+            # Single player crashing
             done = True if status[0] > Status.VALID else False
         elif len(status_array[status_array == 0]) == 1 and self.num_players > 1:
+            # multiple players and only 1 remaining
+            done = True
+        elif sum(status_array) > 0:
+            # catch all - any body/multiple crashes at same time
             done = True
 
         if not done:
@@ -498,7 +502,7 @@ class Tron:
             start_time (datetime): Time to append to the filename - defaults to now()
         """
         # TODO ensure saving and loading are working - write a unit test
-        filename = "{}_{}.json".format(start_time.strftime("%Y%m%d-%H%M%S"), fname_base)
+        filename = "{}.json".format(fname_base)
         with open(filename, "w") as file:
             json.dump(
                 {"grid": self.grid, "states": [p.states for p in self.players]},
