@@ -24,6 +24,10 @@ Add point goals inside map (powerups)
 2. AI vs. n x random
 3. AI vs. n x optimal controller
 
+# Saving Q table
+
+5x5 vision grid - 805MB NPY vs > 3.5GB JSON
+
 # TODO 
 
 * [ ] Build a standalone agetn that can use the saved Q tables

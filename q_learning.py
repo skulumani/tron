@@ -31,7 +31,7 @@ class QLearning:
         self.vision_grid_size = vision_grid_size
         # filenames for storing data
         self.fname_root = (f'tron_ql_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
-        self._qn_fname = f'{self.fname_root}_q_tables.json'
+        self._qn_fname = f'{self.fname_root}_q_tables.npz'
         self._game_stats_fname = f'{self.fname_root}_game_stats.csv'
 
         self.agent_list = build_agent_list(self.players-1, agents)
@@ -48,8 +48,8 @@ class QLearning:
         if os.path.exists(self._qn_fname):
             print("Loading saved Q tables")
             with open(self._qn_fname, "r") as f:
-                table = json.load(f)
-                self.q_table = np.array(table['q_table'], dtype=float)
+                npzfile = np.load(f)
+                self.q_table = npzfile['q_table']
         else: # no saved data
             print("Intializing new Q tables")
             self.q_table = self._initialize_table(self.vision_grid_size, dtype=float)
@@ -138,9 +138,9 @@ class QLearning:
         self.game_stats = pd.concat([self.game_stats, pd.DataFrame.from_records(stats)], ignore_index=True)
         self.game_stats.to_csv(self._game_stats_fname, index=False)
 
-        # save Q and N tables
-        with open(self._qn_fname, "w") as fp:
-            json.dump({'q_table': self.q_table}, fp, indent=4, cls=NumpyEncoder)
+        # save Q 
+        with open(self._qn_fname, "wb") as fp:
+            np.savez(fp, q_table=self.q_table)
         
     def visualize_learning(self):
         """Load learning history and plot data"""
@@ -202,7 +202,6 @@ if __name__ == "__main__":
     if not args.vision_grid % 2:
         print("Vision grid not odd. Setting to 3")
         args.vision_grid = 3
-
     rl_agent = QLearning(players=args.players, size=args.size, agents=args.agents,
                           vision_grid_size=args.vision_grid, 
                           discount_rate=args.discount_rate, epsilon=args.epsilon,

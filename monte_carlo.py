@@ -30,7 +30,7 @@ class MonteCarlo:
         self.vision_grid_size = vision_grid_size
         # filenames for storing data
         self.fname_root = (f'tron_mc_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
-        self._qn_fname = f'{self.fname_root}_qn_tables.json'
+        self._qn_fname = f'{self.fname_root}_qn_tables.npz'
         self._game_stats_fname = f'{self.fname_root}_game_stats.csv'
 
         self.agent_list = build_agent_list(self.players-1, agents)
@@ -48,9 +48,12 @@ class MonteCarlo:
         if os.path.exists(self._qn_fname):
             print("Loading saved Q and N tables")
             with open(self._qn_fname, "r") as f:
-                table = json.load(f)
-                self.q_table = np.array(table['q_table'], dtype=float)
-                self.n_table = np.array(table['n_table'], dtype=int)
+                npzfile = np.load(f)
+                self.q_table = npzfile['q_table']
+                self.n_table = npzfile['n_table']
+                # table = json.load(f)
+                # self.q_table = np.array(table['q_table'], dtype=float)
+                # self.n_table = np.array(table['n_table'], dtype=int)
         else: # no saved data
             print("Intializing new Q and N tables")
             self.q_table = self._initialize_table(self.vision_grid_size, dtype=float)
@@ -157,9 +160,10 @@ class MonteCarlo:
         self.game_stats.to_csv(self._game_stats_fname, index=False)
 
         # save Q and N tables
-        with open(self._qn_fname, "w") as fp:
-            json.dump({'q_table': self.q_table, 
-                       'n_table': self.n_table}, fp, indent=4, cls=NumpyEncoder)
+        with open(self._qn_fname, "wb") as fp:
+            np.savez(fp, q_table=self.q_table, n_table=self.n_table)
+            # json.dump({'q_table': self.q_table, 
+            #            'n_table': self.n_table}, fp, indent=4, cls=NumpyEncoder)
         
     def visualize_learning(self):
         """Load learning history and plot data"""
