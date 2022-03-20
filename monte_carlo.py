@@ -11,6 +11,7 @@ import pandas as pd
 
 import tron
 from agent.util import build_agent_list
+from utilities import NumpyEncoder
 
 class MonteCarlo:
     
@@ -19,8 +20,8 @@ class MonteCarlo:
 
     def __init__(self, players: int = 2, size: int = 25, 
                  agents: str = 'agent.semideterministic',
-                 discount_rate: float = 0.9, epsilon: float = 0.2, filename_root: str = None,
-                 vision_grid_size: int = 3):
+                 discount_rate: float = 0.9, epsilon: float = 0.2, 
+                 filename_root: str = None, vision_grid_size: int = 3):
         self.players = players
         self.size = size
         self.discount_rate = discount_rate # future reward value
@@ -28,22 +29,20 @@ class MonteCarlo:
         
         self.vision_grid_size = vision_grid_size
         # filenames for storing data
-        fname_root = (f'tron_mc_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
-        self._qn_fname = f'{fname_root}_qn_tables.json'
-        self._game_stats_fname = f'{fname_root}_game_stats.csv'
+        self.fname_root = (f'tron_mc_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
+        self._qn_fname = f'{self.fname_root}_qn_tables.json'
+        self._game_stats_fname = f'{self.fname_root}_game_stats.csv'
 
         self.agent_list = build_agent_list(self.players-1, agents)
         self.agents = [importlib.import_module(a) for a in agents]
 
-   
         # Q, N, and game stats data
         self.q_table: Optional[np.ndarray] = None
         self.n_table: Optional[np.ndarray] = None
         self.game_stats: Optional[pd.DataFrame] = None
 
         self._load_qn_tables()
-        # TODO Verify loading/saving of game stats and Q/N tables
-        # self._load_game_stats()
+        self._load_game_stats()
 
     def _load_qn_tables(self) -> None:
         if os.path.exists(self._qn_fname):
@@ -56,6 +55,17 @@ class MonteCarlo:
             print("Intializing new Q and N tables")
             self.q_table = self._initialize_table(self.vision_grid_size, dtype=float)
             self.n_table = self._initialize_table(self.vision_grid_size, dtype=int)
+    
+    def _load_game_stats(self) -> None:
+        if os.path.exists(self._game_stats_fname):
+            print("Loading saved game stats")
+            self.game_stats = pd.read_csv(self._game_stats_fname)
+        else:
+            print("Initializing new game stats")
+            self.game_stats = pd.DataFrame(columns=['episode',
+                                                    'num_actions',
+                                                    'total_reward',
+                                                    'crash_flag'])
 
     def _initialize_table(self, vision_grid_size: int, dtype) -> np.ndarray:
         """Initialize Q and N tables"""
@@ -63,15 +73,6 @@ class MonteCarlo:
         table = np.zeros(size, dtype=dtype)
         return table
     
-    def _load_game_stats(self) -> None:
-        if os.path.exists(self._game_stats_fname):
-            print("Loading saved game stats")
-            self.game_stats = pd.read_csv(self._game_stats_fname)
-        else:
-            print("Initializing game stats")
-            # TODO Decide on what game stats to save
-            # self.game_stats = pd.DataFrame(columns=[])
-
     def select_action(self, state) -> tron.Turn:
         """Pick best action from Q table"""
         idx_a = np.argmax(self.q_table[tuple(state)])
@@ -110,8 +111,10 @@ class MonteCarlo:
     def run_simulation(self, num_episodes: int = 1000, game_save_modulo: int = 500):
 
         stats = []
+        n_prev = self.game_stats.shape[0]
         for n_sim in range(num_episodes):
-            
+            print(f"Simulation {n_sim + 1}/{num_episodes}")
+
             game = tron.Tron(size=self.size, num_players=self.players)
             observation = game.reset()
 
@@ -138,29 +141,44 @@ class MonteCarlo:
                 observation, done, status, reward = game.move(*actions)
                 trajectory["rewards"].append(reward[0]) # reward for first player
             
-            # self.game.get_game_state()
             # save total game state and update table
             self.update_table(trajectory)
-            stats.append(self._build_game_stats(n=0, game_stats=self.game.get_game_stats(uid=1))) # RL is player uid=1
+            stats.append(self._build_game_stats(n=0, game_stats=game.get_game_stats(uid=1))) # RL is player uid=1
+
+            # if (n_sim + 1) % game_save_modulo == 0:
+            game_fname = f"{self.fname_root}_episode_{n_sim}"
+            print("Game saved: {}".format(game.save(fname_base=game_fname)))
+
   
         # save learning statistics
         # TODO Verify the saving/loading here
-        # self.game_stats = pd.concat([self.game_stats, pd.DataFrame.from_records(stats)], ignore_index=True)
-        # self.game_stats.to_csv(self._game_stats_fn, index=False)
+        self.game_stats = pd.concat([self.game_stats, pd.DataFrame.from_records(stats)], ignore_index=True)
+        self.game_stats.to_csv(self._game_stats_fname, index=False)
 
-        # # save Q and N tables
-        # with open(self._qn_tables_fn, "w") as fp:
-        #     json.dump({'q_table': self.q_table, 'n_table': self.n_table}, fp, indent=4, cls=NumpyEncoder)
+        # save Q and N tables
+        with open(self._qn_fname, "w") as fp:
+            json.dump({'q_table': self.q_table, 
+                       'n_table': self.n_table}, fp, indent=4, cls=NumpyEncoder)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MONTE CARLO TRON - Learning using Monte Carlo on-policy")
     parser.add_argument('--players', '-p', type=int, help="Number of players - default 2", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of game grid - default 25", default=25)
     parser.add_argument('--vision_grid', '-v', type=int, help="Size of vision grid - default 3. Must be odd", default=3)
-    parser.add_argument('agents', nargs="*", default=['agent.semideterministic'], help="Opponent modules, e.g. agent.dumb")
+    parser.add_argument('--num_episodes', '-n', type=int, default=1000, help="Number of episodes - default 1000")
+    parser.add_argument('--discount_rate', '-d', type=float, default=0.9, help="Discount rate for future rewards - default 0.9")
+    parser.add_argument('--epsilon', '-e', type=float, default=0.2, help="Epsilon for greedy action selection - default 0.2")
+    parser.add_argument('--filename_root', '-f', type=str, default=None, help="Filename root for saving - default None")
+    parser.add_argument('agents', nargs="*", default=['agent.wallhugger'], help="Opponent modules - default agent.wallhugger")
     args = parser.parse_args()
 
+    if not args.vision_grid % 2:
+        print("Vision grid not odd. Setting to 3")
+        args.vision_grid = 3
+
     rl_agent = MonteCarlo(players=args.players, size=args.size, agents=args.agents,
-                          vision_grid_size=args.vision_grid)
-    rl_agent.run_simulation()
+                          vision_grid_size=args.vision_grid, 
+                          discount_rate=args.discount_rate, epsilon=args.epsilon,
+                          filename_root=args.filename_root)
+    rl_agent.run_simulation(num_episodes=args.num_episodes)
     # rl_agent.visualize_learning()

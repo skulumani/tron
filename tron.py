@@ -201,7 +201,8 @@ class Tron:
     def get_game_stats(self, uid: int = 1) -> Dict[str, Any]:
         """Return some game statistics"""
         stats = {"num_actions": len(self.players[uid-1].states["actions"]),
-                 "total_reward": sum(self.players[uid-1].states["rewards"])}
+                 "total_reward": sum(self.players[uid-1].states["rewards"]),
+                 "crash_flag": self.players[uid-1].states["status"][-1]}
         return stats
     
     def _init_players(self) -> list[Player]:
@@ -490,14 +491,14 @@ class Tron:
 
         return vision_grid.flatten().tolist()
 
-    def save(self, start_time: datetime = datetime.now()) -> str:
+    def save(self, fname_base: str = "tron", start_time: datetime = datetime.now()) -> str:
         """Save the game history to file
 
         Args:
             start_time (datetime): Time to append to the filename - defaults to now()
         """
         # TODO ensure saving and loading are working - write a unit test
-        filename = "{}_tron.json".format(start_time.strftime("%Y%m%d-%H%M%S"))
+        filename = "{}_{}.json".format(start_time.strftime("%Y%m%d-%H%M%S"), fname_base)
         with open(filename, "w") as file:
             json.dump(
                 {"grid": self.grid, "states": [p.states for p in self.players]},
