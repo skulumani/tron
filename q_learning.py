@@ -30,7 +30,7 @@ class QLearning:
         
         self.vision_grid_size = vision_grid_size
         # filenames for storing data
-        self.fname_root = (f'tron_mc_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
+        self.fname_root = (f'tron_ql_{self.size}x{self.size}_{self.players}players' if not filename_root else filename_root)
         self._qn_fname = f'{self.fname_root}_q_tables.json'
         self._game_stats_fname = f'{self.fname_root}_game_stats.csv'
 
