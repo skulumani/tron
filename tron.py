@@ -3,7 +3,7 @@ import enum
 from itertools import combinations, permutations, product
 from datetime import datetime
 import json
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 import numpy as np
 
@@ -196,28 +196,13 @@ class Tron:
         self._update()
         observation = self._get_observation()
 
-        self._initialize_game_state()
-
         return observation
-
-    def get_game_state(self) -> Dict[str, Any]:
-        """Dictionary to hold entire game state for use by RL"""
-        # get player data
-        actions = [p.states["actions"] for p in self.players]
-        rewards = [p.states["rewards"] for p in self.players]
-        status = [p.states["status"] for p in self.players]
-        uid = [p.states["uid"] for p in self.players]
-
-        game_state = {"grid_size": self.size,
-                      "num_players": self.num_players,
-                      "board": self.grid,
-                      "uid": [],
-                      "actions": [],
-                      "rewards": [],
-                      "status": [],
-                      "states": []}
-
-        return game_state
+    
+    def get_game_stats(self, uid: int = 1) -> Dict[str, Any]:
+        """Return some game statistics"""
+        stats = {"num_actions": len(self.players[uid-1].states["actions"]),
+                 "total_reward": sum(self.players[uid-1].states["rewards"])}
+        return stats
     
     def _init_players(self) -> list[Player]:
         players = []
@@ -263,7 +248,7 @@ class Tron:
         # positive x - move to larger/higher columns (right)
         # positive y - move to higher/larger rows (down)
         # third axis for player state
-        grid = np.zeros([self.size, self.size, 1 + self.num_players])
+        grid = np.zeros([self.size, self.size, 1 + self.num_players], dtype=int)
 
         # draw boundary walls
         grid[0, :, 0] = 1
@@ -482,25 +467,28 @@ class Tron:
         """
         # get current player position
         (y, x) = (self.players[uid-1].y, self.players[uid-1].x)
-        rows = np.arange(y-size//2, y+size//2)
-        cols = np.arange(x-size//2, x+size//2)
+        rows = np.arange(y-size//2, y+size//2+1)
+        cols = np.arange(x-size//2, x+size//2+1)
         
         # obstacle grid centered around current position
-        obstacle_grid = np.zeros((size, size))
-        player_grid = np.zeros((size, size))
-        
-        # TODO handle multiple opponents
-        opponent_grid = np.zeros((size, size)) 
+        obstacle_grid = np.zeros((size, size), dtype=int)
+        player_grid = np.zeros((size, size), dtype=int)
+        opponent_grid = np.zeros((size, size), dtype=int) 
 
-        for idx, r, c in enumerate(product(rows, cols)):
+        for idx, (r, c) in enumerate(product(rows, cols)):
             # only extract values that lie within the grid (non negative or > grid_size)
-            if r < 0 or c < 0 or r >= self.grid_size or c >= self.grid_size:
+            if r < 0 or c < 0 or r >= self.size or c >= self.size:
                 continue
-            obstacle_grids[idx] = self.grid[r, c, :]
-            player_grid[idx] = self.grid[r, c, uid]
-            opponent_grid[idx] = self.grid[r, c, uid+1]
+            loc = np.unravel_index(idx, obstacle_grid.shape, order='C')
+            obstacle_grid[loc] = self.grid[r, c, 0]
+            player_grid[loc] = self.grid[r, c, uid]
+            opponent_grid[loc] = 1 if self.grid[r, c, uid+1:].sum() > 0 else 0
 
-        return obstacle_grid.flatten()
+        
+        vision_grid = obstacle_grid + player_grid + opponent_grid
+        vision_grid[vision_grid>0] = 1 
+
+        return vision_grid.flatten().tolist()
 
     def save(self, start_time: datetime = datetime.now()) -> str:
         """Save the game history to file
