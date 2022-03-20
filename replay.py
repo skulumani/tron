@@ -8,7 +8,7 @@ import interface
 
 class ReplayInterface():
     
-    def __init__(self, width=800, fps=15):
+    def __init__(self, width=800, fps=30):
         pygame.init()
 
         self.WIDTH=width
@@ -139,7 +139,7 @@ class ReplayInterface():
         # add current status flag for every player
         status = []
         for p in self.players:
-            idx = self.step if self.step < len(p) else (len(p)-1)
+            idx = self.step if self.step < len(p['status']) else (len(p['status'])-1)
             status.append(tron.Status(p['status'][idx]))
 
         string = f"Step:{self.step}  "

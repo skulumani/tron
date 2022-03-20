@@ -162,7 +162,7 @@ class Player:
         self.states["rewards"].append(reward)
 
         # TODO check if this is necessary
-        self.states["status"][-1] = self.status
+        # self.states["status"][-1] = self.status
 
 
 class Tron:

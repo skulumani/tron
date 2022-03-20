@@ -7,7 +7,8 @@ import argparse
 import tron
 from agent.util import build_agent_list
 
-def run_simulation(players, size, agents):
+def run_simulation(players: int = 2, size: int = 25, agents: list[str] = ['agent.wallhugger'],
+                   fname_root: str = "tron_game"):
     
     print("TRON battle of {} players on {} grid".format(players, size))
     # build agent list
@@ -32,16 +33,18 @@ def run_simulation(players, size, agents):
 
     
     # determine the winner and print
-    filename = game.save()
+    filename = game.save(fname_base=fname_root)
     print("Finished - game saved to {}".format(filename))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TRON - AI battle using provided agents")
     parser.add_argument('--players', '-p', type=int, help="Number of players", default=2)
     parser.add_argument('--size', '-s', type=int, help="Size of grid", default=100)
-    parser.add_argument('agents', nargs='*', default=['agent.dumb',], help="module to use, e.g. agent.dumb")
+    parser.add_argument('--fname_root', '-f', type=str, default="tron_game", help="Filename root for saving game")
+    parser.add_argument('agents', nargs='*', default=['agent.wallhugger',], help="module to use, e.g. agent.dumb")
     args = parser.parse_args()
     
     run_simulation(players=args.players,
                    size=args.size,
-                   agents=args.agents)
+                   agents=args.agents,
+                   fname_root=args.fname_root)

@@ -113,7 +113,8 @@ class MonteCarlo:
         stats = []
         n_prev = self.game_stats.shape[0]
         for n_sim in range(num_episodes):
-            print(f"Simulation {n_sim + 1}/{num_episodes}")
+            if (n_sim + 1) % 100 == 0:
+                print(f"Simulation {n_sim + 1}/{num_episodes}")
 
             game = tron.Tron(size=self.size, num_players=self.players)
             observation = game.reset()
@@ -143,11 +144,11 @@ class MonteCarlo:
             
             # save total game state and update table
             self.update_table(trajectory)
-            stats.append(self._build_game_stats(n=0, game_stats=game.get_game_stats(uid=1))) # RL is player uid=1
+            stats.append(self._build_game_stats(n=n_sim+n_prev, game_stats=game.get_game_stats(uid=1))) # RL is player uid=1
 
-            # if (n_sim + 1) % game_save_modulo == 0:
-            game_fname = f"{self.fname_root}_episode_{n_sim}"
-            print("Game saved: {}".format(game.save(fname_base=game_fname)))
+            if (n_sim + 1) % game_save_modulo == 0:
+                game_fname = f"{self.fname_root}_episode_{n_prev + n_sim+1}"
+                print("Game saved: {}".format(game.save(fname_base=game_fname)))
 
   
         # save learning statistics
@@ -159,6 +160,55 @@ class MonteCarlo:
         with open(self._qn_fname, "w") as fp:
             json.dump({'q_table': self.q_table, 
                        'n_table': self.n_table}, fp, indent=4, cls=NumpyEncoder)
+        
+    def visualize_learning(self):
+        """Load learning history and plot data"""
+        num_episodes = self.game_stats.shape[0]
+        episodes = self.game_stats['episode']
+        num_actions = self.game_stats['num_actions']
+        total_reward = self.game_stats['total_reward']
+        crash_flag = self.game_stats['crash_flag']
+        unique, counts = np.unique(crash_flag, return_counts=True)
+        crash_count = dict(zip(unique, counts))
+
+        print(f"{num_episodes} episodes on {self.size}x{self.size} board")
+        print(f"Actions:")
+        print(f"    Max: {np.max(num_actions)}")
+        print(f"    Avg: {np.mean(num_actions)}")
+        print(f"    Min: {np.min(num_actions)}")
+        print(f"Rewards:")
+        print(f"    Max: {np.max(total_reward)}")
+        print(f"    Avg: {np.mean(total_reward)}")
+        print(f"    Min: {np.min(total_reward)}")
+        print(f"Crash Flag:")
+        for cf, num in zip(unique, counts):
+            print(f"    {tron.Status(cf).name}: {(num/sum(counts)):.2%} or {num}/{sum(counts)}")
+        # print(f"    {: {tron.Status(unique[0]).name} with {counts[0]}/{sum(counts)} occurences")
+        # print(f"    Min: {tron.Status(unique[-1]).name} with {counts[-1]}/{sum(counts)} occurences")
+        print(f"State/Actions:")
+        print(f"    Max: {np.max(self.n_table)}")
+        print(f"    Min: {np.min(self.n_table)}")
+        print(f"    Total visited: {np.sum(self.n_table > 0)/self.n_table.size:.2%}")
+        print(f"    Not visited: {np.sum(self.n_table == 0)/self.n_table.size:.2%}")
+        print(f"Reward Table")
+        print(f"    Max: {np.max(self.q_table)}")
+        print(f"    Avg: {np.mean(self.q_table)}")
+        print(f"    Min: {np.min(self.q_table)}")
+
+        fig, axs = plt.subplots(ncols=1, nrows=3, sharex='col')
+        plt.subplots_adjust(hspace=0)
+        
+        axs[0].scatter(episodes, num_actions, s=1)
+        axs[0].set_ylabel('Number of Actions')
+
+        axs[1].scatter(episodes, total_reward, s=1)
+        axs[1].set_ylabel('Total Reward')
+
+        axs[2].scatter(episodes, crash_flag, s=1)
+        axs[2].set_ylabel('End game state')
+
+        plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="MONTE CARLO TRON - Learning using Monte Carlo on-policy")
@@ -181,4 +231,4 @@ if __name__ == "__main__":
                           discount_rate=args.discount_rate, epsilon=args.epsilon,
                           filename_root=args.filename_root)
     rl_agent.run_simulation(num_episodes=args.num_episodes)
-    # rl_agent.visualize_learning()
+    rl_agent.visualize_learning()

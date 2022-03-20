@@ -6,6 +6,7 @@ import importlib
 
 import tron
 from agent import dumb
+from agent.util import build_agent_list
 
 COLORS = {key:value[0:3] for key, value in pygame.colordict.THECOLORS.items()}
 COLOR_PAIRS =  [(COLORS['blue4'], COLORS['blue1']),
@@ -40,10 +41,11 @@ class UserInterface():
         self.human = human # player 1 actions are human keyboard control
         self.FPS = fps
         self.RECORD = record
-        self.agents = agents[0] # only use the first agent provided
+        self.agents = agents # only use the first agent provided
 
         # import agents
-        self.agent_modules = importlib.import_module(self.agents)
+        agent_list = build_agent_list(self.num_players, self.agents)
+        self.agent_modules = [importlib.import_module(a) for a in agent_list]
 
         # intialize game
         self._reset()
@@ -165,7 +167,6 @@ class UserInterface():
                     
 
         # first action is human - rest are AI
-        # TODO - generalize to allow user functional input for agent
         if self.human is True and action is not None:
             actions.append(action)
             for uid in range(1, self.num_players):
@@ -174,10 +175,10 @@ class UserInterface():
                                                                 self.observation['orientations'],
                                                                 uid))
         elif self.human is False: # all AI players
-            actions = [self.agent_modules.generate_move(self.observation['board'],
-                                                        self.observation['positions'],
-                                                        self.observation['orientations'],
-                                                        uid) for uid in range(self.num_players)]
+            actions = [am.generate_move(self.observation['board'],
+                                        self.observation['positions'],
+                                        self.observation['orientations'],
+                                        uid) for uid, am in enumerate(self.agent_modules)]
         return actions
 
 
@@ -185,6 +186,7 @@ class UserInterface():
         # change game state
         # TODO Figure out what to do about reward
         self.observation, self.done, self.status, reward = self.game.move(*action)
+        print(f"Status: {self.status}")
 
     def render(self, string):
         # draw surface
