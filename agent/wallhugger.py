@@ -1,9 +1,9 @@
+"""Go straight unless there's an obstacle"""
 import numpy as np
 
 import tron
 from agent.util import get_valid_moves, validate_move
 
-"""Go straight unless there's an obstacle"""
 
 def generate_move(board, positions, orientations, uid):
     """Generate move for game
