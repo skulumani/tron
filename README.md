@@ -25,13 +25,17 @@ Add point goals inside map (powerups)
 3. AI vs. n x optimal controller
 
 # TODO 
-* [ ] define a state description
+
+* [ ] Build a standalone agetn that can use the saved Q tables
+* [ ] Save Q  table using NPY instead (save disk space vs. JSON)
+
+* [x] define a state description
     * entire game board at a time
     * vision grid
-* [ ] track actions and rewards at each step
+* [x] track actions and rewards at each step
     * validate that actions and rewards are being tracked properly
-* [ ] record number of visits to each state/action state pair
-* [ ] implement monte carlo first visit approach
+* [x] record number of visits to each state/action state pair
+* [x] implement monte carlo first visit approach
 
 * [x] no more 45 degree moves
 * [.] unit tests for player and game grid - make sure motion works as expected
