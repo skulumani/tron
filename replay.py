@@ -159,7 +159,7 @@ class ReplayInterface():
             self.process_input()
             self.update()
             self.render()
-            self.clock.tick(3)
+            self.clock.tick(self.FPS)
 
         self._quit()
 
